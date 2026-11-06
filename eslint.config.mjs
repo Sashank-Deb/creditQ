@@ -2,15 +2,58 @@
 import js from '@eslint/js';
 import prettier from 'eslint-config-prettier';
 import { configs, plugins } from 'eslint-config-airbnb-extended';
+import { createTypeScriptImportResolver } from 'eslint-import-resolver-typescript';
+
+// Airbnb's React and Next presets apply to the web app only.
+const webOnly = (list) => list.map((c) => ({ ...c, files: ['apps/web/**/*.{ts,tsx}'] }));
 
 export default [
-  { ignores: ['**/node_modules/**', '**/.next/**', '**/out/**', '**/dist/**', '**/coverage/**'] },
+  {
+    ignores: [
+      '**/node_modules/**',
+      '**/.next/**',
+      '**/out/**',
+      '**/dist/**',
+      '**/coverage/**',
+      '**/next-env.d.ts',
+    ],
+  },
   { name: 'js/recommended', ...js.configs.recommended },
   plugins.stylistic,
   plugins.importX,
   ...configs.base.recommended,
   plugins.typescriptEslint,
   ...configs.base.typescript,
+  ...webOnly([
+    plugins.react,
+    plugins.reactA11y,
+    plugins.reactHooks,
+    plugins.next,
+    ...configs.react.recommended,
+    ...configs.react.typescript,
+    ...configs.next.recommended,
+  ]),
+  {
+    name: 'creditq/web-resolver',
+    files: ['apps/web/**/*.{ts,tsx}'],
+    settings: {
+      // Resolve `@/*` and workspace packages through each package's own tsconfig.
+      'import-x/resolver-next': [
+        createTypeScriptImportResolver({
+          project: ['apps/*/tsconfig.json', 'packages/*/tsconfig.json'],
+          noWarnOnMultipleProjects: true,
+        }),
+      ],
+      next: { rootDir: 'apps/web' },
+    },
+    rules: {
+      'react/jsx-filename-extension': ['error', { extensions: ['.tsx'] }],
+      // Next.js App Router requires default exports for pages and layouts.
+      'import-x/no-default-export': 'off',
+      // React 17+ JSX transform.
+      'react/react-in-jsx-scope': 'off',
+    },
+  },
   {
     name: 'creditq/overrides',
     rules: {
