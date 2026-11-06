@@ -1,0 +1,19 @@
+{
+  "name": "@creditq/core",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Pure TypeScript domain logic: civil dates, business calendar, grouped pay days. No DOM, no clock, no I/O.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "devDependencies": {
+    "fast-check": "^4.10.2",
+    "vitest": "^5.1.0"
+  }
+}
