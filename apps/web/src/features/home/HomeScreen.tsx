@@ -1,61 +1,25 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
+import Link from 'next/link';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { formatRupees } from '@creditq/core';
-import { todayInIndia } from '@/lib/today';
-import { buildHomeView, type HomeTile } from './home-view';
-import { sampleCards } from './sample-cards';
+import CardTile, { cardTileStyles as tileStyles } from '@/components/CardTile';
+import { useTodayInIndia, useVaultAction, useVaultData } from '@/lib/vault-client';
+import { currentBills } from './current-bills';
+import { buildHomeView } from './home-view';
 import styles from './HomeScreen.module.scss';
 
 interface Snack {
   text: string;
-  undoCardId?: string;
+  undoPaymentId?: string;
 }
 
 const SNACK_MS = 4000;
 
-function Tile({ tile, onMarkPaid }: { tile: HomeTile; onMarkPaid: (id: string) => void }) {
-  return (
-    <article
-      className={`${styles.tile} ${styles[`tone-${tile.tone}`]} ${tile.isPaid ? styles.paid : ''}`}
-      aria-label={`${tile.name} ending ${tile.last4}, ${tile.dueLabel}`}
-    >
-      <div className={styles.tileTop}>
-        <h2 className={styles.cardName}>{tile.name}</h2>
-        <span className={styles.digits}>•••• {tile.last4}</span>
-      </div>
-      <div className={styles.chip} aria-hidden="true" />
-      <div className={styles.holder}>{tile.holder}</div>
-      <div className={tile.isFocus ? styles.dueFocus : styles.due}>
-        {tile.isPaid ? 'Paid' : tile.dueLabel}
-      </div>
-      {tile.isFocus && (
-        <div className={styles.tileActions}>
-          <button type="button" className={styles.btnOutline}>
-            Open Google Pay
-          </button>
-          <button
-            type="button"
-            className={styles.btnOnTile}
-            onClick={() => onMarkPaid(tile.cardId)}
-          >
-            Mark as paid
-          </button>
-        </div>
-      )}
-    </article>
-  );
-}
-
-// The clock is read on the client only (server snapshot is null), so the static export
-// never bakes in a build date. The date string is stable within a day, as React requires.
-const noSubscribe = () => () => {};
-const useTodayInIndia = (): string | null =>
-  useSyncExternalStore(noSubscribe, todayInIndia, () => null);
-
 export default function HomeScreen() {
   const today = useTodayInIndia();
-  const [paid, setPaid] = useState<string[]>([]);
+  const { data, error } = useVaultData();
+  const act = useVaultAction();
   const [sheetFor, setSheetFor] = useState<string | null>(null);
   const [amount, setAmount] = useState('');
   const [snack, setSnack] = useState<Snack | null>(null);
@@ -74,30 +38,48 @@ export default function HomeScreen() {
     return () => clearTimeout(t);
   }, [snack]);
 
-  const cards = useMemo(() => (today ? sampleCards(today) : []), [today]);
-  const view = useMemo(
-    () => (today ? buildHomeView({ today, cards, paidCardIds: paid }) : null),
-    [today, cards, paid],
+  const current = useMemo(
+    () => (today && data ? currentBills(data.cards, data.bills, data.payments, today) : null),
+    [today, data],
   );
-  if (!view) return <main className={styles.screen} aria-busy="true" />;
+  const view = useMemo(
+    () =>
+      today && current
+        ? buildHomeView({ today, cards: current.cards, paidCardIds: current.paidCardIds })
+        : null,
+    [today, current],
+  );
 
-  const sheetCard = cards.find((c) => c.id === sheetFor);
+  if (error) {
+    return (
+      <main className={styles.screen}>
+        <p className={styles.banner} role="alert">
+          Your cards could not be opened on this device. Try reloading the page.
+        </p>
+      </main>
+    );
+  }
+  if (!view || !current || !today) return <main className={styles.screen} aria-busy="true" />;
+
+  const sheetCard = current.cards.find((c) => c.id === sheetFor);
   const rupees = Number(amount.replace(/[^\d.]/g, ''));
 
-  const markPaid = (logAmount: boolean) => {
-    if (!sheetFor) return;
-    const id = sheetFor;
-    setPaid((p) => [...p, id]);
+  const markPaid = async (logAmount: boolean) => {
+    if (!sheetCard) return;
+    const amountPaise = logAmount && rupees > 0 ? Math.round(rupees * 100) : null;
     setSheetFor(null);
     setAmount('');
-    const logged =
-      logAmount && rupees > 0 ? ` · ${formatRupees(Math.round(rupees * 100))} logged` : '';
-    setSnack({ text: `Marked paid${logged}`, undoCardId: id });
+    const { payment } = await act((v) =>
+      v.markPaid(sheetCard.billId, { amountPaise, paidOn: today }),
+    );
+    const logged = amountPaise ? ` · ${formatRupees(amountPaise)} logged` : '';
+    setSnack({ text: `Marked paid${logged}`, undoPaymentId: payment.id });
   };
 
-  const undo = () => {
-    if (snack?.undoCardId) setPaid((p) => p.filter((x) => x !== snack.undoCardId));
+  const undo = async () => {
+    const id = snack?.undoPaymentId;
     setSnack(null);
+    if (id) await act((v) => v.undoPayment(id));
   };
 
   return (
@@ -105,18 +87,28 @@ export default function HomeScreen() {
       <header className={styles.topBar}>
         <div className={styles.segment} role="tablist" aria-label="View">
           <button type="button" role="tab" aria-selected="true" className={styles.segOn}>
-            Due soon <span className={styles.badge}>{view.dueSoonCount}</span>
+            Due soon
+            {view.dueSoonCount > 0 && <span className={styles.badge}>{view.dueSoonCount}</span>}
           </button>
           <button type="button" role="tab" aria-selected="false" className={styles.segOff}>
             Spends
           </button>
         </div>
+        <Link href="/add" className={styles.iconButton} aria-label="Add a card">
+          +
+        </Link>
       </header>
 
       {view.isEmpty ? (
         <section className={styles.empty}>
           <h1 className={styles.title}>Never miss a card bill</h1>
-          <p>Add a card with 2 quick questions. We remind you 5 days before it is due.</p>
+          <p className={styles.lead}>
+            Add a card with 2 quick questions. We remind you 5 days before it is due. You never need
+            to type an amount.
+          </p>
+          <Link href="/add" className={styles.btnPrimary}>
+            Add your first card
+          </Link>
         </section>
       ) : (
         <>
@@ -126,11 +118,36 @@ export default function HomeScreen() {
           <ol className={styles.stack}>
             {view.tiles.map((t) => (
               <li key={t.cardId}>
-                <Tile tile={t} onMarkPaid={setSheetFor} />
-                <span className={styles.pill}>
-                  <span className={styles.dot} aria-hidden="true" />
-                  {t.pill}
-                </span>
+                <CardTile
+                  name={t.name}
+                  last4={t.last4}
+                  tone={t.tone}
+                  dueLabel={t.dueLabel}
+                  focus={t.isFocus}
+                  paid={t.isPaid}
+                  actions={
+                    t.isFocus ? (
+                      <>
+                        <button type="button" className={tileStyles.btnOutline}>
+                          Open Google Pay
+                        </button>
+                        <button
+                          type="button"
+                          className={tileStyles.btnOnTile}
+                          onClick={() => setSheetFor(t.cardId)}
+                        >
+                          Mark as paid
+                        </button>
+                      </>
+                    ) : null
+                  }
+                />
+                {!t.isPaid && (
+                  <span className={styles.pill}>
+                    <span className={styles.dot} aria-hidden="true" />
+                    {t.pill}
+                  </span>
+                )}
               </li>
             ))}
           </ol>
@@ -185,7 +202,7 @@ export default function HomeScreen() {
       {snack && (
         <div className={styles.snack} role="status">
           <span>{snack.text}</span>
-          {snack.undoCardId && (
+          {snack.undoPaymentId && (
             <button type="button" className={styles.snackAction} onClick={undo}>
               Undo
             </button>

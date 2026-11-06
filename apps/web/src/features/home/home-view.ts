@@ -11,8 +11,9 @@ import {
   type BusinessCalendar,
   type CivilDate,
 } from '@creditq/core';
+import type { TileTone } from '@creditq/vault';
 
-export type TileTone = 'forest' | 'terracotta' | 'sand' | 'olive' | 'slate' | 'teal';
+export type { TileTone };
 
 export interface CardRecord {
   id: string;

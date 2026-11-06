@@ -1,0 +1,71 @@
+// Shared component mixins built on the design tokens.
+@use 'tokens' as *;
+
+@mixin button-base {
+  @include state-layer;
+  @include type(label-m);
+  height: 48px;
+  padding: 0 space(600);
+  border-radius: radius(pill);
+  border: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  box-sizing: border-box;
+}
+
+@mixin button-primary-large {
+  @include button-base;
+  @include type(label-l);
+  height: 56px;
+  width: 100%;
+  background: var(--bg-inverse-primary);
+  color: var(--content-inverse-primary);
+}
+
+@mixin button-text {
+  @include button-base;
+  background: transparent;
+  color: var(--content-secondary);
+}
+
+@mixin field {
+  @include type(paragraph-m);
+  width: 100%;
+  box-sizing: border-box;
+  height: 48px;
+  padding: 0 space(400);
+  border-radius: radius(nested);
+  border: 1px solid var(--border-opaque);
+  background: var(--bg-tertiary);
+  color: var(--content-primary);
+
+  &:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+
+  &[aria-invalid='true'] {
+    border-color: var(--negative);
+  }
+}
+
+@mixin screen {
+  max-width: 480px;
+  min-height: 100dvh;
+  margin: 0 auto;
+  padding: space(300) space(400) space(1000);
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: space(400);
+}
+
+@mixin sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}

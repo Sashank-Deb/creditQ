@@ -1,0 +1,22 @@
+{
+  "name": "@creditq/vault",
+  "version": "0.1.0",
+  "private": true,
+  "description": "On-device storage: Dexie over IndexedDB, every record AES-GCM encrypted. Browser only.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@creditq/core": "workspace:*",
+    "dexie": "^4.4.7"
+  },
+  "devDependencies": {
+    "fake-indexeddb": "^6.2.7",
+    "vitest": "^5.1.0"
+  }
+}

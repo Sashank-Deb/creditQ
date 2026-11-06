@@ -1,13 +1,34 @@
 @use '../../styles/tokens' as *;
+@use '../../styles/ui' as *;
 
 .screen {
-  max-width: 480px;
-  min-height: 100dvh;
-  margin: 0 auto;
-  padding: space(300) space(400) space(1000);
-  display: flex;
-  flex-direction: column;
-  gap: space(400);
+  @include screen;
+}
+
+.btnPrimary {
+  @include button-primary-large;
+}
+
+.btnText {
+  @include button-text;
+}
+
+.iconButton {
+  @include button-base;
+  @include type(heading-xs);
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  margin-left: space(300);
+  background: var(--bg-secondary);
+  color: var(--content-primary);
+  border: 1px solid var(--border-opaque);
+}
+
+.lead {
+  @include type(paragraph-m);
+  margin: 0 0 space(600);
+  color: var(--content-secondary);
 }
 
 .srOnly {
@@ -94,114 +115,12 @@
     flex-direction: column;
     align-items: center;
     gap: space(300);
+    min-width: 0;
+
+    > article {
+      align-self: stretch;
+    }
   }
-}
-
-@each $tone, $n in ('forest': 1, 'terracotta': 2, 'sand': 3, 'olive': 4, 'slate': 5, 'teal': 6) {
-  .tone-#{$tone} {
-    --l: var(--tile-#{$n}-line);
-    --tile-btn: var(--tile-#{$n}-btn);
-    --tile-btnfg: var(--tile-#{$n}-btnfg);
-    color: var(--tile-#{$n}-ink);
-    background:
-      repeating-linear-gradient(45deg, var(--l) 0 1px, transparent 1px 12px),
-      repeating-linear-gradient(-45deg, var(--l) 0 1px, transparent 1px 12px),
-      linear-gradient(135deg, var(--tile-#{$n}-from), var(--tile-#{$n}-to));
-  }
-}
-
-.tile {
-  width: 100%;
-  box-sizing: border-box;
-  padding: space(500);
-  border-radius: radius(large);
-  border: 1px solid var(--border-tile);
-  @include elevation(200);
-  display: grid;
-  gap: space(200);
-}
-
-.paid {
-  opacity: 0.64;
-}
-
-.tileTop {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-}
-
-.cardName {
-  @include type(heading-xs);
-  margin: 0;
-}
-
-.digits,
-.holder {
-  @include type(mono-xs);
-}
-
-.chip {
-  width: 40px;
-  height: 32px;
-  border-radius: radius(nested);
-  background: linear-gradient(135deg, #e9d79a, #c9a54c);
-  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.16);
-}
-
-.due {
-  @include type(heading-s);
-}
-
-.dueFocus {
-  @include type(display-xs);
-}
-
-.tileActions {
-  display: flex;
-  gap: space(300);
-  margin-top: space(200);
-
-  > button {
-    flex: 1;
-    padding: 0 space(300);
-    white-space: nowrap;
-  }
-}
-
-.btnOutline,
-.btnOnTile,
-.btnPrimary,
-.btnText {
-  @include state-layer;
-  @include type(label-m);
-  height: 48px;
-  padding: 0 space(600);
-  border-radius: radius(pill);
-  border: 0;
-}
-
-.btnOutline {
-  background: transparent;
-  color: inherit;
-  box-shadow: inset 0 0 0 2px currentColor;
-}
-
-.btnOnTile {
-  background: var(--tile-btn);
-  color: var(--tile-btnfg);
-}
-
-.btnPrimary {
-  height: 56px;
-  @include type(label-l);
-  background: var(--bg-inverse-primary);
-  color: var(--content-inverse-primary);
-}
-
-.btnText {
-  background: transparent;
-  color: var(--content-secondary);
 }
 
 .pill {

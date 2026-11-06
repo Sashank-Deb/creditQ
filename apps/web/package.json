@@ -12,7 +12,10 @@
     "next": "16.4.5",
     "react": "19.3.0",
     "react-dom": "19.3.0",
-    "@creditq/core": "workspace:*"
+    "@creditq/core": "workspace:*",
+    "@creditq/vault": "workspace:*",
+    "dexie": "^4.4.7",
+    "dexie-react-hooks": "^4.4.0"
   },
   "devDependencies": {
     "@tailwindcss/turbopack": "^4",

@@ -1,0 +1,159 @@
+@use '../../styles/tokens' as *;
+@use '../../styles/ui' as *;
+
+.screen {
+  @include screen;
+}
+
+.topBar {
+  height: 48px;
+  display: flex;
+  align-items: center;
+  gap: space(400);
+}
+
+.back {
+  @include button-text;
+  height: 44px;
+  padding: 0 space(300);
+  color: var(--content-primary);
+}
+
+.progress {
+  flex: 1;
+  height: 4px;
+  border-radius: radius(pill);
+  background: var(--bg-tertiary);
+  overflow: hidden;
+
+  span {
+    display: block;
+    height: 100%;
+    background: var(--bg-inverse-primary);
+    @include motion(width, move);
+  }
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: space(200);
+  flex: 1;
+}
+
+.title {
+  @include type(heading-m);
+  margin: space(400) 0 space(200);
+}
+
+.lead {
+  @include type(paragraph-m);
+  margin: 0;
+  color: var(--content-secondary);
+
+  strong {
+    color: var(--content-primary);
+  }
+}
+
+.label {
+  @include type(label-s);
+  margin-top: space(300);
+  color: var(--content-secondary);
+}
+
+.input {
+  @include field;
+}
+
+.last4 {
+  @include type(mono-s);
+  width: 128px;
+  height: 48px;
+}
+
+.hint {
+  @include type(paragraph-s);
+  margin: 0;
+  color: var(--content-secondary);
+}
+
+.error {
+  @include type(label-s);
+  margin: 0;
+  color: var(--negative);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: space(200);
+  margin-top: space(100);
+}
+
+.chip {
+  @include state-layer;
+  @include type(label-s);
+  height: 36px;
+  padding: 0 space(400);
+  border-radius: radius(nested);
+  border: 1px solid var(--border-opaque);
+  background: var(--bg-secondary);
+  color: var(--content-primary);
+}
+
+.soon {
+  @include type(paragraph-s);
+  margin: space(400) 0 0;
+  text-align: center;
+  color: var(--content-tertiary);
+}
+
+.dock {
+  position: sticky;
+  bottom: 0;
+  margin-top: auto;
+  padding: space(400) 0;
+  display: grid;
+  gap: space(200);
+  background: var(--bg-primary);
+}
+
+.btnPrimary {
+  @include button-primary-large;
+}
+
+.btnText {
+  @include button-text;
+}
+
+.doneIcon {
+  @include type(heading-s);
+  width: 48px;
+  height: 48px;
+  margin-top: space(800);
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--bg-positive);
+  color: var(--positive);
+}
+
+.preview {
+  display: grid;
+  gap: space(100);
+  padding: space(400);
+  border-radius: radius(default);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-opaque);
+  @include elevation(100);
+}
+
+.overline {
+  @include type(mono-xs);
+  color: var(--content-secondary);
+}
+
+.previewText {
+  @include type(label-m);
+}
