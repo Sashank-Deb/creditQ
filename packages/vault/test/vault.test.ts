@@ -3,7 +3,7 @@ import Dexie from 'dexie';
 import { openVault, type VaultOptions } from '../src';
 
 let n = 0;
-const fresh = (extra: Partial<VaultOptions> = {}): VaultOptions => {
+const fresh = (extra: Partial<VaultOptions> = {}): VaultOptions & { name: string } => {
   n += 1;
   let id = 0;
   return {

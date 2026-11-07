@@ -52,6 +52,10 @@ export default [
       'import-x/no-default-export': 'off',
       // React 17+ JSX transform.
       'react/react-in-jsx-scope': 'off',
+      // Function components use default arguments; defaultProps is deprecated in React 19.
+      'react/require-default-props': ['error', { functions: 'defaultArguments' }],
+      // A label tied by htmlFor is accessible; wrapping the input is not also required.
+      'jsx-a11y/label-has-associated-control': ['error', { assert: 'either' }],
     },
   },
   {
