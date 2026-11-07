@@ -172,3 +172,13 @@ html:root {
     color-scheme: dark;
   }
 }
+
+/* Spends bars: validated with the dataviz palette checks (lightness band, chroma floor, contrast). */
+html:root {
+  --chart-bar: #b0532d;
+}
+@media (prefers-color-scheme: dark) {
+  html:root {
+    --chart-bar: #d47149;
+  }
+}

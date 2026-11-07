@@ -1,0 +1,208 @@
+@use '../../styles/tokens' as *;
+@use '../../styles/ui' as *;
+
+.spends {
+  display: flex;
+  flex-direction: column;
+  gap: space(600);
+}
+
+.srOnly {
+  @include sr-only;
+}
+
+.kicker {
+  @include type(label-s);
+  margin: 0;
+  color: var(--content-secondary);
+}
+
+.hero {
+  @include type(display-s);
+  margin: space(100) 0;
+}
+
+.note {
+  @include type(paragraph-s);
+  margin: 0;
+  color: var(--content-secondary);
+}
+
+.empty {
+  padding: space(600) 0;
+}
+
+.emptyTitle {
+  @include type(heading-l);
+  margin: 0 0 space(300);
+}
+
+.segment {
+  display: flex;
+  padding: space(100);
+  gap: space(100);
+  border-radius: radius(pill);
+  background: var(--bg-tertiary);
+}
+
+.segOn,
+.segOff {
+  @include state-layer;
+  @include type(label-s);
+  flex: 1;
+  height: 36px;
+  border: 0;
+  border-radius: radius(pill);
+}
+
+.segOn {
+  background: var(--bg-secondary);
+  color: var(--content-primary);
+  @include elevation(100);
+}
+
+.segOff {
+  background: transparent;
+  color: var(--content-secondary);
+}
+
+// ---- month bars: thin marks, 4px rounded data end, baseline anchored ----
+.chart {
+  margin: 0;
+  display: grid;
+  gap: space(300);
+}
+
+.plot {
+  height: 192px;
+  // Headroom above the tallest bar for the hover value label.
+  padding-top: space(700);
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: space(200);
+  align-items: end;
+  border-bottom: 1px solid var(--border-opaque);
+}
+
+.col {
+  position: relative;
+  height: 100%;
+  overflow: visible;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--content-secondary);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  cursor: pointer;
+  border-radius: radius(nested) radius(nested) 0 0;
+
+  &:hover {
+    background: var(--border-transparent);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+
+  &:hover .tip,
+  &:focus-visible .tip {
+    opacity: 1;
+  }
+}
+
+.bar {
+  width: 24px;
+  border-radius: 4px 4px 0 0;
+  background: var(--chart-bar);
+  @include motion(height, move);
+}
+
+.colOn {
+  background: var(--border-transparent);
+}
+
+.label {
+  @include type(label-xs);
+  position: absolute;
+  bottom: -24px;
+}
+
+.colOn .label {
+  color: var(--content-primary);
+  font-weight: 700;
+}
+
+.tip {
+  @include type(label-xs);
+  position: absolute;
+  top: calc(-1 * #{space(700)});
+  padding: space(100) space(200);
+  border-radius: radius(tag);
+  background: var(--bg-inverse-primary);
+  color: var(--content-inverse-primary);
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  @include motion(opacity);
+}
+
+.chart > .note {
+  margin-top: space(600);
+}
+
+// ---- each card ----
+.cardList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: space(400);
+}
+
+.cardRow {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: space(200);
+}
+
+.cardText {
+  display: flex;
+  gap: space(300);
+  align-items: baseline;
+  min-width: 0;
+}
+
+.cardName {
+  @include type(label-m);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.digits {
+  @include type(mono-xs);
+  color: var(--content-secondary);
+}
+
+.cardAmount {
+  @include type(label-m);
+}
+
+.track {
+  grid-column: 1 / -1;
+  height: 8px;
+  border-radius: radius(pill);
+  background: var(--bg-tertiary);
+  overflow: hidden;
+
+  span {
+    display: block;
+    height: 100%;
+    border-radius: radius(pill);
+    background: var(--chart-bar);
+  }
+}

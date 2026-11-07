@@ -173,9 +173,12 @@ export default function SettingsScreen() {
             aria-describedby="card-names-hint"
             className={styles.switch}
             checked={settings.contentLevel === 'cards'}
-            onChange={(e) =>
-              act((v) => v.saveSettings({ contentLevel: e.target.checked ? 'cards' : 'minimal' }))
-            }
+            onChange={(e) => {
+              // Read the new value now: React restores a controlled checkbox right after this
+              // event, so reading it later inside the async save would see the old value.
+              const contentLevel = e.target.checked ? 'cards' : 'minimal';
+              act((v) => v.saveSettings({ contentLevel }));
+            }}
           />
         </div>
       </section>

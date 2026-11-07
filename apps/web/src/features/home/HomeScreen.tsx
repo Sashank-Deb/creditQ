@@ -5,6 +5,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { formatClock, formatRupees } from '@creditq/core';
 import CardTile, { cardTileStyles as tileStyles } from '@/components/CardTile';
 import { useTodayInIndia, useVaultAction, useVaultData } from '@/lib/vault-client';
+import SpendsView from '@/features/spends/SpendsView';
 import { currentBills } from './current-bills';
 import { buildHomeView } from './home-view';
 import styles from './HomeScreen.module.scss';
@@ -20,6 +21,7 @@ export default function HomeScreen() {
   const today = useTodayInIndia();
   const { data, error } = useVaultData();
   const act = useVaultAction();
+  const [tab, setTab] = useState<'due' | 'spends'>('due');
   const [sheetFor, setSheetFor] = useState<string | null>(null);
   const [amount, setAmount] = useState('');
   const [snack, setSnack] = useState<Snack | null>(null);
@@ -92,11 +94,23 @@ export default function HomeScreen() {
     <main className={styles.screen}>
       <header className={styles.topBar}>
         <div className={styles.segment} role="tablist" aria-label="View">
-          <button type="button" role="tab" aria-selected="true" className={styles.segOn}>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={tab === 'due'}
+            className={tab === 'due' ? styles.segOn : styles.segOff}
+            onClick={() => setTab('due')}
+          >
             Due soon
             {view.dueSoonCount > 0 && <span className={styles.badge}>{view.dueSoonCount}</span>}
           </button>
-          <button type="button" role="tab" aria-selected="false" className={styles.segOff}>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={tab === 'spends'}
+            className={tab === 'spends' ? styles.segOn : styles.segOff}
+            onClick={() => setTab('spends')}
+          >
             Spends
           </button>
         </div>
@@ -108,7 +122,10 @@ export default function HomeScreen() {
         </Link>
       </header>
 
-      {view.isEmpty ? (
+      {tab === 'spends' && data && (
+        <SpendsView today={today} cards={data.cards} payments={data.payments} />
+      )}
+      {tab === 'due' && view.isEmpty && (
         <section className={styles.empty}>
           <h1 className={styles.title}>Never miss a card bill</h1>
           <p className={styles.lead}>
@@ -119,7 +136,8 @@ export default function HomeScreen() {
             Add your first card
           </Link>
         </section>
-      ) : (
+      )}
+      {tab === 'due' && !view.isEmpty && (
         <>
           <p className={styles.banner} role="status">
             {view.banner}

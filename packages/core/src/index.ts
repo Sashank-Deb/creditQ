@@ -5,3 +5,4 @@ export * from './reminders';
 export * from './format';
 export * from './card-input';
 export * from './notices';
+export * from './spend';
