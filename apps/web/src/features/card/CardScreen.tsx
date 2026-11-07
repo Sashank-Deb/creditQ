@@ -2,10 +2,11 @@
 
 import { useRouter } from 'next/navigation';
 import { useRef, useState, useSyncExternalStore } from 'react';
-import { formatShortDate } from '@creditq/core';
-import type { Bill, Card, Payment } from '@creditq/vault';
+import { detectIssuer, formatShortDate, listBanks } from '@creditq/core';
+import type { Bill, Card, Payment, TilePattern, TileTone } from '@creditq/vault';
 import BackButton from '@/components/BackButton';
 import CardTile from '@/components/CardTile';
+import TileStylePicker from '@/components/TileStylePicker';
 import { useTodayInIndia, useVaultAction, useVaultData } from '@/lib/vault-client';
 import { removalWarning, validateCardForm, type CardForm } from './card-form';
 import styles from './CardScreen.module.scss';
@@ -29,7 +30,13 @@ function Editor({
   const router = useRouter();
   const act = useVaultAction();
   const confirmRef = useRef<HTMLDialogElement>(null);
+  const banks = listBanks();
+  const initialBank = card.bank ?? detectIssuer(card.name).bank;
+  const [otherBank, setOtherBank] = useState(initialBank !== '' && !banks.includes(initialBank));
+  const [tone, setTone] = useState<TileTone>(card.tone);
+  const [pattern, setPattern] = useState<TilePattern>(card.pattern ?? 'diamonds');
   const [form, setForm] = useState<CardForm>({
+    bank: initialBank,
     name: card.name,
     last4: card.last4,
     dueDate: bill?.dueDate ?? '',
@@ -53,7 +60,8 @@ function Editor({
     }
     try {
       const { statementDate, ...rest } = r.value;
-      await act((v) => v.updateCard(card.id, statementDate ? { ...rest, statementDate } : rest));
+      const input = { ...rest, tone, pattern };
+      await act((v) => v.updateCard(card.id, statementDate ? { ...input, statementDate } : input));
       setSaved(true);
     } catch (e) {
       setErrors({ dueDate: (e as Error).message });
@@ -100,7 +108,9 @@ function Editor({
       <CardTile
         name={form.name.trim()}
         last4={form.last4}
-        tone={card.tone}
+        tone={tone}
+        pattern={pattern}
+        issuer={detectIssuer(form.bank || card.name)}
         dueLabel={form.dueDate ? `Due ${formatShortDate(form.dueDate)}` : 'Due date'}
       />
 
@@ -113,7 +123,53 @@ function Editor({
         }}
       >
         <h1 className={styles.title}>Edit card</h1>
-        {field('name', 'Card name', { autoComplete: 'off' })}
+        <div className={styles.field}>
+          <label className={styles.label} htmlFor="edit-bank">
+            Bank
+          </label>
+          <select
+            id="edit-bank"
+            className={styles.input}
+            value={otherBank ? 'Other' : form.bank}
+            aria-invalid={Boolean(errors.bank)}
+            aria-describedby="edit-bank-msg"
+            onChange={(e) => {
+              if (e.target.value === 'Other') {
+                setOtherBank(true);
+                set('bank', '');
+              } else {
+                setOtherBank(false);
+                set('bank', e.target.value);
+              }
+            }}
+          >
+            <option value="" disabled>
+              Choose your bank
+            </option>
+            {banks.map((b) => (
+              <option key={b} value={b}>
+                {b}
+              </option>
+            ))}
+            <option value="Other">Other</option>
+          </select>
+          {otherBank && (
+            <input
+              className={styles.input}
+              value={form.bank}
+              placeholder="Bank name"
+              autoComplete="off"
+              aria-label="Bank name"
+              aria-invalid={Boolean(errors.bank)}
+              aria-describedby="edit-bank-msg"
+              onChange={(e) => set('bank', e.target.value)}
+            />
+          )}
+          <p id="edit-bank-msg" className={errors.bank ? styles.error : styles.hint}>
+            {errors.bank}
+          </p>
+        </div>
+        {field('name', 'Card name', { autoComplete: 'off' }, 'The name of the card, not the bank.')}
         {field(
           'last4',
           'Last 4 digits',
@@ -132,6 +188,23 @@ function Editor({
           { type: 'date', max: form.dueDate || undefined },
           'When the bill is generated. The card comes back as due from this date each month.',
         )}
+        <div className={styles.field}>
+          <p className={styles.label}>Card look</p>
+          <TileStylePicker
+            name="edit"
+            tone={tone}
+            pattern={pattern}
+            autoTone={card.tone}
+            onTone={(t) => {
+              setTone(t ?? card.tone);
+              setSaved(false);
+            }}
+            onPattern={(p) => {
+              setPattern(p);
+              setSaved(false);
+            }}
+          />
+        </div>
         <div className={styles.dock}>
           {saved && (
             <p className={styles.saved} role="status">

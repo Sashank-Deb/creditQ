@@ -2,15 +2,15 @@
 
 import Link from 'next/link';
 import { useReducer, useState } from 'react';
-import { formatShortDate } from '@creditq/core';
+import { detectIssuer, formatShortDate, listBanks } from '@creditq/core';
 import { TILE_TONES, type TileTone } from '@creditq/vault';
 import BackButton from '@/components/BackButton';
 import CardTile from '@/components/CardTile';
+import TileStylePicker from '@/components/TileStylePicker';
 import { useTodayInIndia, useVaultAction, useVaultData } from '@/lib/vault-client';
 import {
   addCardReducer,
   initialAddCard,
-  QUICK_ISSUERS,
   reminderPreview,
   type AddCardState,
 } from './add-card-flow';
@@ -31,6 +31,7 @@ function Flow({ today, onAgain }: { today: string; onAgain: () => void }) {
   const { data } = useVaultData();
   const act = useVaultAction();
 
+  const banks = listBanks();
   const nextTone: TileTone = TILE_TONES[(data?.cards.length ?? 0) % TILE_TONES.length] ?? 'forest';
   const dueLabel = state.dueDate ? `Due ${formatShortDate(state.dueDate)}` : 'Due date next';
 
@@ -42,6 +43,9 @@ function Flow({ today, onAgain }: { today: string; onAgain: () => void }) {
       await act((v) =>
         v.addCard({
           name: next.name,
+          bank: next.bank,
+          ...(next.tone ? { tone: next.tone } : {}),
+          pattern: next.pattern,
           last4: next.last4,
           dueDate: next.dueDate,
           statementDate: next.statementDate,
@@ -110,7 +114,14 @@ function Flow({ today, onAgain }: { today: string; onAgain: () => void }) {
         </div>
       </header>
 
-      <CardTile name={state.name.trim()} last4={state.last4} tone={nextTone} dueLabel={dueLabel} />
+      <CardTile
+        name={state.name.trim()}
+        last4={state.last4}
+        tone={state.tone ?? nextTone}
+        pattern={state.pattern}
+        issuer={detectIssuer(state.bank || 'Bank')}
+        dueLabel={dueLabel}
+      />
 
       <form
         className={styles.form}
@@ -123,6 +134,41 @@ function Flow({ today, onAgain }: { today: string; onAgain: () => void }) {
         {step1 ? (
           <>
             <h1 className={styles.title}>Which card is it?</h1>
+            <label className={styles.label} htmlFor="card-bank">
+              Bank
+            </label>
+            <select
+              id="card-bank"
+              className={styles.input}
+              value={state.otherBank ? 'Other' : state.bank}
+              aria-invalid={Boolean(state.errors.bank)}
+              aria-describedby="card-bank-error"
+              onChange={(e) => dispatch({ type: 'pickBank', bank: e.target.value })}
+            >
+              <option value="" disabled>
+                Choose your bank
+              </option>
+              {banks.map((b) => (
+                <option key={b} value={b}>
+                  {b}
+                </option>
+              ))}
+              <option value="Other">Other</option>
+            </select>
+            {state.otherBank && (
+              <input
+                id="card-bank-other"
+                className={styles.input}
+                value={state.bank}
+                placeholder="Bank name"
+                autoComplete="off"
+                aria-label="Bank name"
+                aria-invalid={Boolean(state.errors.bank)}
+                aria-describedby="card-bank-error"
+                onChange={(e) => dispatch({ type: 'set', field: 'bank', value: e.target.value })}
+              />
+            )}
+            <FieldError id="card-bank-error" message={state.errors.bank} />
             <label className={styles.label} htmlFor="card-name">
               Card name
             </label>
@@ -130,25 +176,16 @@ function Flow({ today, onAgain }: { today: string; onAgain: () => void }) {
               id="card-name"
               className={styles.input}
               value={state.name}
-              placeholder="Axis Flipkart"
+              placeholder="Premier, Flipkart, Regalia..."
               autoComplete="off"
               aria-invalid={Boolean(state.errors.name)}
-              aria-describedby="card-name-error"
+              aria-describedby="card-name-hint card-name-error"
               onChange={(e) => dispatch({ type: 'set', field: 'name', value: e.target.value })}
             />
+            <p id="card-name-hint" className={styles.hint}>
+              The name of the card itself, not the bank.
+            </p>
             <FieldError id="card-name-error" message={state.errors.name} />
-            <div className={styles.chips} role="group" aria-label="Quick start">
-              {QUICK_ISSUERS.map((issuer) => (
-                <button
-                  key={issuer}
-                  type="button"
-                  className={styles.chip}
-                  onClick={() => dispatch({ type: 'pickIssuer', issuer })}
-                >
-                  {issuer}
-                </button>
-              ))}
-            </div>
             <label className={styles.label} htmlFor="card-last4">
               Last 4 digits
             </label>
@@ -167,6 +204,17 @@ function Flow({ today, onAgain }: { today: string; onAgain: () => void }) {
               Only the last 4. We never ask for your full card number.
             </p>
             <FieldError id="card-last4-error" message={state.errors.last4} />
+            <details className={styles.customise}>
+              <summary>Customise colour and pattern</summary>
+              <TileStylePicker
+                name="add"
+                tone={state.tone}
+                pattern={state.pattern}
+                autoTone={nextTone}
+                onTone={(tone) => dispatch({ type: 'setTone', tone })}
+                onPattern={(pattern) => dispatch({ type: 'setPattern', pattern })}
+              />
+            </details>
             <p className={styles.soon}>Import from statement (coming soon)</p>
           </>
         ) : null}

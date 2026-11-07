@@ -30,7 +30,7 @@ export default function PaidDeck({ cards }: { cards: readonly DeckCard[] }) {
           return (
             <li
               key={c.cardId}
-              className={`${styles.card} ${styles[`tone-${c.tone}`]} ${isTop ? styles.top : ''}`}
+              className={`${styles.card} ${styles[`tone-${c.tone}`]} ${styles[`pattern-${c.pattern}`]} ${isTop ? styles.top : ''}`}
             >
               {isTop ? (
                 <div className={styles.face}>

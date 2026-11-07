@@ -157,3 +157,23 @@
 .previewText {
   @include type(label-m);
 }
+
+.customise {
+  margin-top: space(300);
+  padding: space(300) space(400);
+  border-radius: radius(default);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-opaque);
+
+  summary {
+    @include type(label-m);
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+  }
+
+  &[open] summary {
+    margin-bottom: space(300);
+  }
+}

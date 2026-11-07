@@ -3,42 +3,62 @@ import {
   addCardReducer,
   initialAddCard,
   reminderPreview,
-  QUICK_ISSUERS,
 } from '../src/features/add-card/add-card-flow';
 
 const today = '2026-02-26';
 const run = (...actions: Parameters<typeof addCardReducer>[1][]) =>
   actions.reduce(addCardReducer, initialAddCard(today));
 
-describe('add-card flow (2 steps, one question each)', () => {
+describe('add-card flow (3 steps, one question each)', () => {
   it('starts on step 1 with nothing filled', () => {
     expect(initialAddCard(today)).toMatchObject({
       step: 1,
+      bank: '',
       name: '',
       last4: '',
       dueDate: '',
       statementDate: '',
+      tone: null,
+      pattern: 'diamonds',
     });
   });
 
-  it('offers at most 5 quick-start issuers plus nothing else (Hick)', () => {
-    expect(QUICK_ISSUERS.length).toBeLessThanOrEqual(5);
+  it('keeps bank and card name as two separate fields', () => {
+    const s = run(
+      { type: 'pickBank', bank: 'HSBC' },
+      { type: 'set', field: 'name', value: 'Premier' },
+    );
+    expect(s).toMatchObject({ bank: 'HSBC', name: 'Premier', otherBank: false });
   });
 
-  it('a quick-start chip fills the card name', () => {
-    expect(run({ type: 'pickIssuer', issuer: 'HDFC' }).name).toBe('HDFC ');
+  it('"Other" lets the user type their own bank', () => {
+    const s = run(
+      { type: 'pickBank', bank: 'Other' },
+      { type: 'set', field: 'bank', value: 'Jupiter' },
+    );
+    expect(s).toMatchObject({ otherBank: true, bank: 'Jupiter' });
+    expect(run({ type: 'pickBank', bank: 'Other' }).bank).toBe('');
   });
 
-  it('blocks step 1 until the details are valid, with inline errors', () => {
-    const s = run({ type: 'set', field: 'name', value: 'Axis Flipkart' }, { type: 'next' });
+  it('lets the user choose a colour and a pattern, or leave both automatic', () => {
+    const s = run({ type: 'setTone', tone: 'teal' }, { type: 'setPattern', pattern: 'dots' });
+    expect(s).toMatchObject({ tone: 'teal', pattern: 'dots' });
+  });
+
+  it('blocks step 1 until bank, name and digits are valid, with inline errors', () => {
+    const s = run({ type: 'set', field: 'name', value: 'Flipkart' }, { type: 'next' });
     expect(s.step).toBe(1);
-    expect(s.errors).toEqual({ last4: 'Enter the last 4 digits' });
+    expect(s.errors).toEqual({
+      bank: 'Choose your bank',
+      last4: 'Enter the last 4 digits',
+    });
   });
 
   it('clears a field error as soon as the user edits that field', () => {
     const s = run({ type: 'next' }, { type: 'set', field: 'last4', value: '9' });
     expect(s.errors.last4).toBeUndefined();
     expect(s.errors.name).toBe('Enter a name for this card');
+    expect(run({ type: 'next' }, { type: 'pickBank', bank: 'HSBC' }).errors.bank).toBeUndefined();
   });
 
   it('keeps only digits in last 4 and caps at 4 characters', () => {
@@ -47,7 +67,8 @@ describe('add-card flow (2 steps, one question each)', () => {
 
   it('asks the due date on step 2, then the statement date on step 3, before saving', () => {
     const s1 = run(
-      { type: 'set', field: 'name', value: 'Axis Flipkart' },
+      { type: 'pickBank', bank: 'Axis Bank' },
+      { type: 'set', field: 'name', value: 'Flipkart' },
       { type: 'set', field: 'last4', value: '9033' },
       { type: 'next' },
     );
@@ -82,7 +103,8 @@ describe('add-card flow (2 steps, one question each)', () => {
 
   it('back from step 3 returns to step 2 with the dates kept', () => {
     const s = run(
-      { type: 'set', field: 'name', value: 'SBI' },
+      { type: 'pickBank', bank: 'SBI Card' },
+      { type: 'set', field: 'name', value: 'Cashback' },
       { type: 'set', field: 'last4', value: '1207' },
       { type: 'next' },
       { type: 'set', field: 'dueDate', value: '2026-03-10' },
@@ -94,12 +116,13 @@ describe('add-card flow (2 steps, one question each)', () => {
 
   it('back from step 2 keeps what was typed', () => {
     const s = run(
-      { type: 'set', field: 'name', value: 'SBI' },
+      { type: 'pickBank', bank: 'SBI Card' },
+      { type: 'set', field: 'name', value: 'Cashback' },
       { type: 'set', field: 'last4', value: '1207' },
       { type: 'next' },
       { type: 'back' },
     );
-    expect(s).toMatchObject({ step: 1, name: 'SBI', last4: '1207' });
+    expect(s).toMatchObject({ step: 1, bank: 'SBI Card', name: 'Cashback', last4: '1207' });
   });
 });
 

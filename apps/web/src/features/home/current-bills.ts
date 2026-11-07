@@ -49,6 +49,8 @@ export const currentBills = (
         name: card.name,
         last4: card.last4,
         tone: card.tone,
+        ...(card.bank ? { bank: card.bank } : {}),
+        ...(card.pattern ? { pattern: card.pattern } : {}),
         dueDate: shown.dueDate,
         ...(shown.statementDate ? { statementDate: shown.statementDate } : {}),
         billId: shown.id,

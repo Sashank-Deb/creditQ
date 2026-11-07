@@ -154,6 +154,7 @@ export default function HomeScreen() {
                   name={t.name}
                   last4={t.last4}
                   tone={t.tone}
+                  pattern={t.pattern}
                   dueLabel={t.dueLabel}
                   issuer={t.issuer}
                   focus={t.isFocus}

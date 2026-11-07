@@ -13,9 +13,9 @@ import {
   type CivilDate,
   type Issuer,
 } from '@creditq/core';
-import type { TileTone } from '@creditq/vault';
+import type { TilePattern, TileTone } from '@creditq/vault';
 
-export type { TileTone };
+export type { TilePattern, TileTone };
 
 export interface CardRecord {
   id: string;
@@ -23,6 +23,9 @@ export interface CardRecord {
   last4: string;
   dueDate: CivilDate;
   tone: TileTone;
+  /** Chosen separately from the card name; older cards fall back to the name. */
+  bank?: string;
+  pattern?: TilePattern;
   /** When the shown bill was generated; no pay day is planned before it. */
   statementDate?: CivilDate;
   /** For a paid card: when its next bill is generated. */
@@ -34,6 +37,7 @@ export interface HomeTile {
   name: string;
   last4: string;
   tone: TileTone;
+  pattern: TilePattern;
   issuer: Issuer;
   dueLabel: string;
   pill: string;
@@ -45,6 +49,7 @@ export interface DeckCard {
   name: string;
   last4: string;
   tone: TileTone;
+  pattern: TilePattern;
   issuer: Issuer;
   label: string;
 }
@@ -163,7 +168,8 @@ export const buildHomeView = (input: HomeInput): HomeView => {
       name: c.name,
       last4: c.last4,
       tone: c.tone,
-      issuer: detectIssuer(c.name),
+      pattern: c.pattern ?? 'diamonds',
+      issuer: detectIssuer(c.bank ?? c.name),
       dueLabel: `Due ${formatShortDate(c.dueDate)}`,
       pill: capitalise(pill),
       isFocus: i === 0,
@@ -177,7 +183,8 @@ export const buildHomeView = (input: HomeInput): HomeView => {
       name: c.name,
       last4: c.last4,
       tone: c.tone,
-      issuer: detectIssuer(c.name),
+      pattern: c.pattern ?? 'diamonds',
+      issuer: detectIssuer(c.bank ?? c.name),
       label: c.nextStatementDate
         ? `Paid · next bill ${formatShortDate(c.nextStatementDate)}`
         : 'Paid',

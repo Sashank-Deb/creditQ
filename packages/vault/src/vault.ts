@@ -10,6 +10,7 @@
 import Dexie, { type Table } from 'dexie';
 import {
   nextMonthlyDueDate,
+  validateBank,
   validateCardDetails,
   validateStatementDate,
   type CivilDate,
@@ -19,11 +20,20 @@ import { createAesGcmCodec, generateDeviceKey, type Sealed } from './codec';
 export const TILE_TONES = ['forest', 'terracotta', 'sand', 'olive', 'slate', 'teal'] as const;
 export type TileTone = (typeof TILE_TONES)[number];
 
+/** Background patterns the user can pick for a card. */
+export const TILE_PATTERNS = ['diamonds', 'lines', 'dots', 'plain'] as const;
+export type TilePattern = (typeof TILE_PATTERNS)[number];
+export const DEFAULT_PATTERN: TilePattern = 'diamonds';
+
 export interface Card {
   id: string;
   name: string;
   last4: string;
+  /** Bank, chosen separately from the card name. Absent on cards added before v3. */
+  bank?: string;
   tone: TileTone;
+  /** Background pattern; absent means the default. */
+  pattern?: TilePattern;
   /** Preferred due day of month, so a "31st" card returns to the 31st after February. */
   dueDay: number;
   /** Day of month the statement (bill) is generated; absent on cards added before v2. */
@@ -75,6 +85,9 @@ export const DEFAULT_SETTINGS: ReminderSettings = {
 export interface NewCard {
   name: string;
   last4: string;
+  bank?: string;
+  tone?: TileTone;
+  pattern?: TilePattern;
   dueDate: CivilDate;
   statementDate?: CivilDate;
 }
@@ -164,9 +177,19 @@ export const openVault = async (options: VaultOptions = {}) => {
     return read<Bill>('bills', row);
   };
 
+  const checkStyle = (input: NewCard): string | undefined => {
+    if (input.tone && !TILE_TONES.includes(input.tone)) return 'Unknown card colour';
+    if (input.pattern && !TILE_PATTERNS.includes(input.pattern)) return 'Unknown card pattern';
+    return undefined;
+  };
+
   const addCard = async (input: NewCard): Promise<{ card: Card; bill: Bill }> => {
     const checked = validateCardDetails(input);
     if (!checked.ok) throw new Error(Object.values(checked.errors).join(' '));
+    const bank = input.bank === undefined ? undefined : validateBank(input.bank);
+    if (bank && !bank.ok) throw new Error(Object.values(bank.errors).join(' '));
+    const styleError = checkStyle(input);
+    if (styleError) throw new Error(styleError);
     if (input.statementDate !== undefined) {
       const s = validateStatementDate(input.statementDate, input.dueDate);
       if (!s.ok) throw new Error(Object.values(s.errors).join(' '));
@@ -176,7 +199,9 @@ export const openVault = async (options: VaultOptions = {}) => {
     const card: Card = {
       id: newId(),
       ...checked.value,
-      tone: TILE_TONES[count % TILE_TONES.length] as TileTone,
+      ...(bank ? { bank: bank.value } : {}),
+      tone: input.tone ?? (TILE_TONES[count % TILE_TONES.length] as TileTone),
+      pattern: input.pattern ?? DEFAULT_PATTERN,
       dueDay: dayOf(input.dueDate),
       ...(input.statementDate ? { statementDay: dayOf(input.statementDate) } : {}),
       createdAt: t,
@@ -277,14 +302,22 @@ export const openVault = async (options: VaultOptions = {}) => {
       const s = validateStatementDate(input.statementDate, input.dueDate);
       if (!s.ok) throw new Error(Object.values(s.errors).join(' '));
     }
+    const bank = input.bank === undefined ? undefined : validateBank(input.bank);
+    if (bank && !bank.ok) throw new Error(Object.values(bank.errors).join(' '));
+    const styleError = checkStyle(input);
+    if (styleError) throw new Error(styleError);
     const row = await db.cards.get(cardId);
     if (!row) throw new Error('Card not found');
     const old = await read<Card>('cards', row);
+    // A new bank wins; otherwise keep the stored one (older cards may have none).
+    const keptBank = bank?.ok ? bank.value : old.bank;
     const card: Card = {
       id: old.id,
-      tone: old.tone,
+      tone: input.tone ?? old.tone,
+      pattern: input.pattern ?? old.pattern ?? DEFAULT_PATTERN,
       createdAt: old.createdAt,
       ...checked.value,
+      ...(keptBank ? { bank: keptBank } : {}),
       dueDay: dayOf(input.dueDate),
       ...(input.statementDate ? { statementDay: dayOf(input.statementDate) } : {}),
     };

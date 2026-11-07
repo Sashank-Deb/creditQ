@@ -21,6 +21,16 @@ describe('buildHomeView', () => {
     expect(JSON.stringify(view)).not.toMatch(/₹|amount/i);
   });
 
+  it('takes the badge from the bank, not the card name', () => {
+    const view = buildHomeView({
+      today: '2026-02-26',
+      cards: [{ ...cards[0], name: 'Premier', bank: 'HSBC', pattern: 'dots' }],
+      paidCardIds: [],
+    });
+    expect(view.tiles[0]).toMatchObject({ name: 'Premier', pattern: 'dots' });
+    expect(view.tiles[0]?.issuer.monogram).toBe('HSBC');
+  });
+
   it('puts each card under a brand-style monogram, never a logo', () => {
     const view = buildHomeView({ today: '2026-02-26', cards, paidCardIds: [] });
     expect(view.tiles.map((t) => t.issuer.monogram)).toEqual(['HDFC', 'AXIS', 'SBI']);

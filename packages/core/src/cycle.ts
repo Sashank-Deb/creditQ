@@ -7,6 +7,8 @@ import type { Result } from './card-input';
 
 export interface Issuer {
   id: string;
+  /** Display bank name ('' for banks we do not know). */
+  bank: string;
   monogram: string;
   /** Badge background. */
   color: string;
@@ -15,35 +17,129 @@ export interface Issuer {
 }
 
 // Approximate brand colours, darkened where needed so white text stays readable.
-const ISSUERS: { id: string; monogram: string; match: RegExp; color: string; ink: string }[] = [
-  { id: 'hdfc', monogram: 'HDFC', match: /\bhdfc\b/i, color: '#004C8F', ink: '#FFFFFF' },
-  { id: 'icici', monogram: 'ICICI', match: /\bicici\b/i, color: '#AE282E', ink: '#FFFFFF' },
-  { id: 'sbi', monogram: 'SBI', match: /\bsbi\b/i, color: '#0B4EA2', ink: '#FFFFFF' },
-  { id: 'axis', monogram: 'AXIS', match: /\baxis\b/i, color: '#97144D', ink: '#FFFFFF' },
+const ISSUERS: {
+  id: string;
+  bank: string;
+  monogram: string;
+  match: RegExp;
+  color: string;
+  ink: string;
+}[] = [
+  {
+    id: 'hdfc',
+    bank: 'HDFC Bank',
+    monogram: 'HDFC',
+    match: /\bhdfc\b/i,
+    color: '#004C8F',
+    ink: '#FFFFFF',
+  },
+  {
+    id: 'icici',
+    bank: 'ICICI Bank',
+    monogram: 'ICICI',
+    match: /\bicici\b/i,
+    color: '#AE282E',
+    ink: '#FFFFFF',
+  },
+  {
+    id: 'sbi',
+    bank: 'SBI Card',
+    monogram: 'SBI',
+    match: /\bsbi\b/i,
+    color: '#0B4EA2',
+    ink: '#FFFFFF',
+  },
+  {
+    id: 'axis',
+    bank: 'Axis Bank',
+    monogram: 'AXIS',
+    match: /\baxis\b/i,
+    color: '#97144D',
+    ink: '#FFFFFF',
+  },
   {
     id: 'amex',
+    bank: 'American Express',
     monogram: 'AMEX',
     match: /\b(amex|american express)\b/i,
     color: '#0061B6',
     ink: '#FFFFFF',
   },
-  { id: 'kotak', monogram: 'KOTAK', match: /\bkotak\b/i, color: '#C4161C', ink: '#FFFFFF' },
-  { id: 'idfc', monogram: 'IDFC', match: /\bidfc\b/i, color: '#9C1D26', ink: '#FFFFFF' },
-  { id: 'yes', monogram: 'YES', match: /\byes\b/i, color: '#00518F', ink: '#FFFFFF' },
-  { id: 'indusind', monogram: 'INDUS', match: /\bindusind\b/i, color: '#8B1C2E', ink: '#FFFFFF' },
-  { id: 'rbl', monogram: 'RBL', match: /\brbl\b/i, color: '#21409A', ink: '#FFFFFF' },
-  { id: 'au', monogram: 'AU', match: /\bau\b/i, color: '#6D2077', ink: '#FFFFFF' },
-  { id: 'hsbc', monogram: 'HSBC', match: /\bhsbc\b/i, color: '#C4000F', ink: '#FFFFFF' },
+  {
+    id: 'kotak',
+    bank: 'Kotak Mahindra Bank',
+    monogram: 'KOTAK',
+    match: /\bkotak\b/i,
+    color: '#C4161C',
+    ink: '#FFFFFF',
+  },
+  {
+    id: 'idfc',
+    bank: 'IDFC FIRST Bank',
+    monogram: 'IDFC',
+    match: /\bidfc\b/i,
+    color: '#9C1D26',
+    ink: '#FFFFFF',
+  },
+  {
+    id: 'yes',
+    bank: 'YES Bank',
+    monogram: 'YES',
+    match: /\byes\b/i,
+    color: '#00518F',
+    ink: '#FFFFFF',
+  },
+  {
+    id: 'indusind',
+    bank: 'IndusInd Bank',
+    monogram: 'INDUS',
+    match: /\bindusind\b/i,
+    color: '#8B1C2E',
+    ink: '#FFFFFF',
+  },
+  {
+    id: 'rbl',
+    bank: 'RBL Bank',
+    monogram: 'RBL',
+    match: /\brbl\b/i,
+    color: '#21409A',
+    ink: '#FFFFFF',
+  },
+  {
+    id: 'au',
+    bank: 'AU Small Finance Bank',
+    monogram: 'AU',
+    match: /\bau\b/i,
+    color: '#6D2077',
+    ink: '#FFFFFF',
+  },
+  {
+    id: 'hsbc',
+    bank: 'HSBC',
+    monogram: 'HSBC',
+    match: /\bhsbc\b/i,
+    color: '#C4000F',
+    ink: '#FFFFFF',
+  },
   {
     id: 'sc',
+    bank: 'Standard Chartered',
     monogram: 'SC',
     match: /\b(standard chartered|stanchart)\b/i,
     color: '#0067C5',
     ink: '#FFFFFF',
   },
-  { id: 'federal', monogram: 'FED', match: /\bfederal\b/i, color: '#00539B', ink: '#FFFFFF' },
+  {
+    id: 'federal',
+    bank: 'Federal Bank',
+    monogram: 'FED',
+    match: /\bfederal\b/i,
+    color: '#00539B',
+    ink: '#FFFFFF',
+  },
   {
     id: 'bob',
+    bank: 'Bank of Baroda',
     monogram: 'BOB',
     match: /\b(bob|baroda)\b/i,
     color: '#F15A29',
@@ -51,9 +147,35 @@ const ISSUERS: { id: string; monogram: string; match: RegExp; color: string; ink
   },
 ];
 
+/** Bank names for the bank picker, in a sensible order. "Other" is added by the UI. */
+export const listBanks = (): string[] => ISSUERS.map((i) => i.bank);
+
+const MAX_BANK = 40;
+
+/** The bank is chosen separately from the card name ("HSBC" + "Premier", not "HSBC Premier"). */
+export const validateBank = (input: string): Result<string, 'bank'> => {
+  const bank = input.trim().replace(/\s+/g, ' ');
+  if (/(?:\d[ -]?){13,19}/.test(bank)) {
+    return { ok: false, errors: { bank: 'Remove the card number from the bank name' } };
+  }
+  if (bank === '') return { ok: false, errors: { bank: 'Choose your bank' } };
+  if (bank.length > MAX_BANK) {
+    return { ok: false, errors: { bank: `Keep the bank name under ${MAX_BANK} characters` } };
+  }
+  return { ok: true, value: bank };
+};
+
 export const detectIssuer = (cardName: string): Issuer => {
   const known = ISSUERS.find((i) => i.match.test(cardName));
-  if (known) return { id: known.id, monogram: known.monogram, color: known.color, ink: known.ink };
+  if (known) {
+    return {
+      id: known.id,
+      bank: known.bank,
+      monogram: known.monogram,
+      color: known.color,
+      ink: known.ink,
+    };
+  }
   const initials = cardName
     .trim()
     .split(/\s+/)
@@ -61,7 +183,7 @@ export const detectIssuer = (cardName: string): Issuer => {
     .slice(0, 2)
     .map((w) => w.charAt(0).toUpperCase())
     .join('');
-  return { id: 'other', monogram: initials || '•', color: '#3A4A42', ink: '#FFFFFF' };
+  return { id: 'other', bank: '', monogram: initials || '•', color: '#3A4A42', ink: '#FFFFFF' };
 };
 
 const MIN_GAP = 7;

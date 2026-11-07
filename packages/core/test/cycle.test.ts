@@ -65,3 +65,30 @@ describe('monthGrid', () => {
     weeks.forEach((w) => expect(w).toHaveLength(7));
   });
 });
+
+describe('banks are their own field (separate from the card name)', () => {
+  it('lists known banks, HSBC included, for the bank picker', async () => {
+    const { listBanks } = await import('../src');
+    const banks = listBanks();
+    expect(banks).toContain('HSBC');
+    expect(banks).toContain('HDFC Bank');
+    expect(new Set(banks).size).toBe(banks.length);
+  });
+
+  it('gives a bank badge from the bank name, whatever the card is called', () => {
+    expect(detectIssuer('HSBC')).toMatchObject({ id: 'hsbc', monogram: 'HSBC' });
+    expect(detectIssuer('HDFC Bank')).toMatchObject({ id: 'hdfc' });
+    expect(detectIssuer('Federal Bank')).toMatchObject({ id: 'federal' });
+  });
+
+  it('validates the bank name', async () => {
+    const { validateBank } = await import('../src');
+    expect(validateBank('  HSBC ')).toEqual({ ok: true, value: 'HSBC' });
+    expect(validateBank('')).toEqual({ ok: false, errors: { bank: 'Choose your bank' } });
+    expect(validateBank('x'.repeat(41)).ok).toBe(false);
+    expect(validateBank('Bank 4111 1111 1111 1111')).toEqual({
+      ok: false,
+      errors: { bank: 'Remove the card number from the bank name' },
+    });
+  });
+});

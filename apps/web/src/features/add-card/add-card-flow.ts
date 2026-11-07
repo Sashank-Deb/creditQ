@@ -5,6 +5,7 @@
  */
 import {
   createCalendar,
+  validateBank,
   formatShortDate,
   planPayDays,
   validateCardDetails,
@@ -12,25 +13,32 @@ import {
   validateStatementDate,
   type CivilDate,
 } from '@creditq/core';
+import type { TilePattern, TileTone } from '@creditq/vault';
 
-/** At most five quick starts: Hick's law. "Other" is just typing a name. */
-export const QUICK_ISSUERS = ['HDFC', 'ICICI', 'SBI', 'Axis', 'Amex'] as const;
-
-type Field = 'name' | 'last4' | 'dueDate' | 'statementDate';
+type Field = 'bank' | 'name' | 'last4' | 'dueDate' | 'statementDate';
 
 export interface AddCardState {
   today: CivilDate;
   step: 1 | 2 | 3 | 'saving';
+  /** The bank, chosen separately from the card name. */
+  bank: string;
+  /** True when the user picked "Other" and types their own bank. */
+  otherBank: boolean;
   name: string;
   last4: string;
   dueDate: string;
   statementDate: string;
+  /** null = automatic: the next colour in the rotation. */
+  tone: TileTone | null;
+  pattern: TilePattern;
   errors: Partial<Record<Field, string>>;
 }
 
 export type AddCardAction =
   | { type: 'set'; field: Field; value: string }
-  | { type: 'pickIssuer'; issuer: string }
+  | { type: 'pickBank'; bank: string }
+  | { type: 'setTone'; tone: TileTone | null }
+  | { type: 'setPattern'; pattern: TilePattern }
   | { type: 'next' }
   | { type: 'back' }
   | { type: 'failed'; message: string };
@@ -38,10 +46,14 @@ export type AddCardAction =
 export const initialAddCard = (today: CivilDate): AddCardState => ({
   today,
   step: 1,
+  bank: '',
+  otherBank: false,
   name: '',
   last4: '',
   dueDate: '',
   statementDate: '',
+  tone: null,
+  pattern: 'diamonds',
   errors: {},
 });
 
@@ -57,8 +69,19 @@ export const addCardReducer = (state: AddCardState, action: AddCardAction): AddC
         action.field === 'last4' ? action.value.replace(/\D/g, '').slice(0, 4) : action.value;
       return { ...state, [action.field]: value, errors: withoutError(state.errors, action.field) };
     }
-    case 'pickIssuer':
-      return { ...state, name: `${action.issuer} `, errors: withoutError(state.errors, 'name') };
+    case 'pickBank':
+      return action.bank === 'Other'
+        ? { ...state, otherBank: true, bank: '', errors: withoutError(state.errors, 'bank') }
+        : {
+            ...state,
+            otherBank: false,
+            bank: action.bank,
+            errors: withoutError(state.errors, 'bank'),
+          };
+    case 'setTone':
+      return { ...state, tone: action.tone };
+    case 'setPattern':
+      return { ...state, pattern: action.pattern };
     case 'back':
       if (state.step === 2) return { ...state, step: 1, errors: {} };
       if (state.step === 3) return { ...state, step: 2, errors: {} };
@@ -67,10 +90,18 @@ export const addCardReducer = (state: AddCardState, action: AddCardAction): AddC
       return { ...state, step: 3, errors: { statementDate: action.message } };
     case 'next': {
       if (state.step === 1) {
-        const r = validateCardDetails({ name: state.name, last4: state.last4 });
-        return r.ok
-          ? { ...state, ...r.value, step: 2, errors: {} }
-          : { ...state, errors: r.errors };
+        const details = validateCardDetails({ name: state.name, last4: state.last4 });
+        const bank = validateBank(state.bank);
+        if (details.ok && bank.ok) {
+          return { ...state, ...details.value, bank: bank.value, step: 2, errors: {} };
+        }
+        return {
+          ...state,
+          errors: {
+            ...(bank.ok ? {} : bank.errors),
+            ...(details.ok ? {} : details.errors),
+          },
+        };
       }
       if (state.step === 2) {
         const r = validateDueDate(state.dueDate, state.today);

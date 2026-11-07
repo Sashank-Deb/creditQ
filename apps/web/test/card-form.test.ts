@@ -3,7 +3,8 @@ import { removalWarning, validateCardForm } from '../src/features/card/card-form
 
 const today = '2026-11-07';
 const good = {
-  name: 'HDFC Regalia',
+  bank: 'HDFC Bank',
+  name: 'Regalia',
   last4: '4821',
   dueDate: '2026-11-20',
   statementDate: '2026-11-02',
@@ -11,7 +12,7 @@ const good = {
 
 describe('validateCardForm (edit card)', () => {
   it('accepts a valid card and returns the cleaned values', () => {
-    expect(validateCardForm({ ...good, name: ' HDFC  Regalia ' }, today)).toEqual({
+    expect(validateCardForm({ ...good, name: ' Regalia ' }, today)).toEqual({
       ok: true,
       value: good,
     });
@@ -19,12 +20,13 @@ describe('validateCardForm (edit card)', () => {
 
   it('collects every field error at once', () => {
     const r = validateCardForm(
-      { name: '', last4: '12', dueDate: '2026-11-01', statementDate: '' },
+      { bank: '', name: '', last4: '12', dueDate: '2026-11-01', statementDate: '' },
       today,
     );
     expect(r).toEqual({
       ok: false,
       errors: {
+        bank: 'Choose your bank',
         name: 'Enter a name for this card',
         last4: 'Enter the last 4 digits',
         dueDate: 'That date has passed. Enter your next due date.',

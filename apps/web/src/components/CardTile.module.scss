@@ -1,18 +1,7 @@
 @use '../styles/tokens' as *;
 @use '../styles/ui' as *;
 
-@each $tone, $n in ('forest': 1, 'terracotta': 2, 'sand': 3, 'olive': 4, 'slate': 5, 'teal': 6) {
-  .tone-#{$tone} {
-    --l: var(--tile-#{$n}-line);
-    --tile-btn: var(--tile-#{$n}-btn);
-    --tile-btnfg: var(--tile-#{$n}-btnfg);
-    color: var(--tile-#{$n}-ink);
-    background:
-      repeating-linear-gradient(45deg, var(--l) 0 1px, transparent 1px 12px),
-      repeating-linear-gradient(-45deg, var(--l) 0 1px, transparent 1px 12px),
-      linear-gradient(135deg, var(--tile-#{$n}-from), var(--tile-#{$n}-to));
-  }
-}
+@include tile-themes;
 
 .tile {
   width: 100%;

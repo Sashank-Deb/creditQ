@@ -3,6 +3,7 @@
  */
 import {
   formatRupees,
+  validateBank,
   validateCardDetails,
   validateDueDate,
   validateStatementDate,
@@ -10,6 +11,7 @@ import {
 } from '@creditq/core';
 
 export interface CardForm {
+  bank: string;
   name: string;
   last4: string;
   dueDate: string;
@@ -17,6 +19,7 @@ export interface CardForm {
 }
 
 export interface CleanCard {
+  bank: string;
   name: string;
   last4: string;
   dueDate: CivilDate;
@@ -32,6 +35,8 @@ export const validateCardForm = (
   const errors: Errors = {};
   const details = validateCardDetails({ name: form.name, last4: form.last4 });
   if (!details.ok) Object.assign(errors, details.errors);
+  const bank = validateBank(form.bank);
+  if (!bank.ok) Object.assign(errors, bank.errors);
   const due = validateDueDate(form.dueDate, today);
   if (!due.ok) Object.assign(errors, due.errors);
   // Older cards may have no statement date yet; once given, it must fit the due date.
@@ -40,11 +45,14 @@ export const validateCardForm = (
     const s = validateStatementDate(form.statementDate, due.value);
     if (!s.ok) Object.assign(errors, s.errors);
   }
-  if (!details.ok || !due.ok || Object.keys(errors).length > 0) return { ok: false, errors };
+  if (!details.ok || !bank.ok || !due.ok || Object.keys(errors).length > 0) {
+    return { ok: false, errors };
+  }
   return {
     ok: true,
     value: {
       ...details.value,
+      bank: bank.value,
       dueDate: due.value,
       statementDate: hasStatement ? form.statementDate.trim() : undefined,
     },

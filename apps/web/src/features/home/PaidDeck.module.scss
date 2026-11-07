@@ -37,16 +37,7 @@ $strip: 56px; // visible part of each stacked card
   display: grid;
 }
 
-@each $tone, $n in ('forest': 1, 'terracotta': 2, 'sand': 3, 'olive': 4, 'slate': 5, 'teal': 6) {
-  .tone-#{$tone} {
-    --l: var(--tile-#{$n}-line);
-    color: var(--tile-#{$n}-ink);
-    background:
-      repeating-linear-gradient(45deg, var(--l) 0 1px, transparent 1px 12px),
-      repeating-linear-gradient(-45deg, var(--l) 0 1px, transparent 1px 12px),
-      linear-gradient(135deg, var(--tile-#{$n}-from), var(--tile-#{$n}-to));
-  }
-}
+@include tile-themes;
 
 // Each card is a full-height tile; all but the first slide up under the one above,
 // leaving a $strip-tall edge visible, like a fanned deck.

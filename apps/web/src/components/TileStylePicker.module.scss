@@ -1,0 +1,98 @@
+@use '../styles/tokens' as *;
+@use '../styles/ui' as *;
+
+.picker {
+  display: grid;
+  gap: space(400);
+}
+
+.group {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+}
+
+.legend {
+  @include type(label-s);
+  padding: 0;
+  margin-bottom: space(200);
+  color: var(--content-secondary);
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: space(300);
+}
+
+.srOnly {
+  @include sr-only;
+}
+
+// The real radio is visually hidden but stays focusable and keyboard operable.
+.radio {
+  position: absolute;
+  opacity: 0;
+  width: 44px;
+  height: 44px;
+  margin: 0;
+  cursor: pointer;
+}
+
+.swatchLabel,
+.patternLabel {
+  position: relative;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: space(100);
+}
+
+.swatch {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 2px solid var(--bg-primary);
+  box-shadow: 0 0 0 1px var(--border-opaque);
+  @include motion(box-shadow);
+}
+
+.radio:checked + .swatch {
+  box-shadow: 0 0 0 3px var(--border-selected);
+}
+
+.radio:focus-visible + .swatch,
+.radio:focus-visible + .patternBox {
+  outline: 2px solid var(--ring);
+  outline-offset: 3px;
+}
+
+@each $tone, $n in ('forest': 1, 'terracotta': 2, 'sand': 3, 'olive': 4, 'slate': 5, 'teal': 6) {
+  .swatch-#{$tone} {
+    background: linear-gradient(135deg, var(--tile-#{$n}-from), var(--tile-#{$n}-to));
+  }
+}
+
+.patternBox {
+  width: 56px;
+  height: 44px;
+  border-radius: radius(nested);
+  border: 1px solid var(--border-opaque);
+  color: var(--content-primary);
+  // Pattern preview on a neutral surface, using the content colour at low strength.
+  --l: color-mix(in srgb, var(--content-primary) 22%, transparent);
+  --from: var(--bg-tertiary);
+  --to: var(--bg-tertiary);
+  @include motion(box-shadow);
+}
+
+.radio:checked + .patternBox {
+  box-shadow: 0 0 0 3px var(--border-selected);
+}
+
+.patternName {
+  @include type(label-xs);
+}
+
+@include tile-themes;

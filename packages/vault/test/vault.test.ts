@@ -311,3 +311,65 @@ describe('vault: edit and remove a card', () => {
     vault.close();
   });
 });
+
+describe('vault: bank, colour and pattern are their own fields', () => {
+  it('stores the bank separately from the card name', async () => {
+    const vault = await openVault(fresh());
+    const { card } = await vault.addCard({
+      name: 'Premier',
+      bank: 'HSBC',
+      last4: '4821',
+      dueDate: '2026-11-20',
+    });
+    expect(card).toMatchObject({ name: 'Premier', bank: 'HSBC' });
+    vault.close();
+  });
+
+  it('uses the chosen colour and pattern, else rotates colours with the default pattern', async () => {
+    const vault = await openVault(fresh());
+    const chosen = await vault.addCard({
+      name: 'A',
+      last4: '1111',
+      dueDate: '2026-11-20',
+      tone: 'teal',
+      pattern: 'dots',
+    });
+    expect(chosen.card).toMatchObject({ tone: 'teal', pattern: 'dots' });
+    const auto = await vault.addCard({ name: 'B', last4: '2222', dueDate: '2026-11-21' });
+    expect(auto.card).toMatchObject({ tone: 'terracotta', pattern: 'diamonds' });
+    vault.close();
+  });
+
+  it('rejects an unknown colour or pattern', async () => {
+    const vault = await openVault(fresh());
+    await expect(
+      vault.addCard({
+        name: 'A',
+        last4: '1111',
+        dueDate: '2026-11-20',
+        pattern: 'stripes' as never,
+      }),
+    ).rejects.toThrow(/pattern/i);
+    vault.close();
+  });
+
+  it('edits bank, colour and pattern', async () => {
+    const vault = await openVault(fresh());
+    const { card } = await vault.addCard({ name: 'A', last4: '1111', dueDate: '2026-11-20' });
+    const updated = await vault.updateCard(card.id, {
+      name: 'A',
+      bank: 'HSBC',
+      last4: '1111',
+      dueDate: '2026-11-20',
+      tone: 'slate',
+      pattern: 'lines',
+    });
+    expect(updated).toMatchObject({ bank: 'HSBC', tone: 'slate', pattern: 'lines' });
+    expect((await vault.listCards())[0]).toMatchObject({
+      bank: 'HSBC',
+      tone: 'slate',
+      pattern: 'lines',
+    });
+    vault.close();
+  });
+});

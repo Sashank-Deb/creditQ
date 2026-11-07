@@ -1,13 +1,14 @@
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { detectIssuer, type Issuer } from '@creditq/core';
-import type { TileTone } from '@creditq/vault';
+import type { TilePattern, TileTone } from '@creditq/vault';
 import styles from './CardTile.module.scss';
 
 interface CardTileProps {
   name: string;
   last4: string;
   tone: TileTone;
+  pattern?: TilePattern;
   dueLabel: string;
   issuer?: Issuer;
   focus?: boolean;
@@ -50,6 +51,7 @@ export default function CardTile({
   name,
   last4,
   tone,
+  pattern = 'diamonds',
   dueLabel,
   issuer = undefined,
   focus = false,
@@ -61,7 +63,7 @@ export default function CardTile({
   const badge = issuer ?? detectIssuer(name || 'Card');
   return (
     <article
-      className={`${styles.tile} ${styles[`tone-${tone}`]} ${paid ? styles.paid : ''}`}
+      className={`${styles.tile} ${styles[`tone-${tone}`]} ${styles[`pattern-${pattern}`]} ${paid ? styles.paid : ''}`}
       aria-label={`${name || 'New card'} ending ${digits}, ${paid ? 'paid' : dueLabel}`}
     >
       <div className={styles.top}>
