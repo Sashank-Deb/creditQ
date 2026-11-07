@@ -1,0 +1,134 @@
+@use '../../styles/tokens' as *;
+@use '../../styles/ui' as *;
+
+.screen {
+  @include screen;
+}
+
+.topBar {
+  height: 48px;
+  display: flex;
+  align-items: center;
+}
+
+.title {
+  @include type(heading-m);
+  margin: space(200) 0 0;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: space(400);
+}
+
+.field {
+  display: grid;
+  gap: space(200);
+}
+
+.label {
+  @include type(label-s);
+  color: var(--content-secondary);
+}
+
+.input {
+  @include field;
+}
+
+.hint,
+.error {
+  @include type(paragraph-s);
+  margin: 0;
+  color: var(--content-secondary);
+}
+
+.error {
+  @include type(label-s);
+  color: var(--negative);
+}
+
+.dock {
+  display: grid;
+  gap: space(200);
+}
+
+.saved {
+  @include type(label-s);
+  margin: 0;
+  color: var(--positive);
+  text-align: center;
+}
+
+.btnPrimary {
+  @include button-primary-large;
+}
+
+.btnText {
+  @include button-text;
+}
+
+.btnDanger {
+  @include button-base;
+  background: var(--negative);
+  color: #fff;
+}
+
+.danger {
+  display: grid;
+  gap: space(300);
+  justify-items: start;
+  padding: space(400);
+  border-radius: radius(default);
+  background: var(--bg-negative);
+}
+
+.dangerTitle {
+  @include type(heading-xs);
+  margin: 0;
+}
+
+.confirm {
+  // Tailwind's base styles zero dialog margins; restore centring.
+  margin: auto;
+  width: calc(100% - 32px);
+  max-width: 360px;
+  box-sizing: border-box;
+  padding: space(600);
+  border: 0;
+  border-radius: radius(large);
+  background: var(--bg-secondary);
+  color: var(--content-primary);
+  @include elevation(300);
+
+  &::backdrop {
+    background: var(--scrim);
+  }
+}
+
+.cautionIcon {
+  @include type(heading-s);
+  width: 48px;
+  height: 48px;
+  margin-bottom: space(400);
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--bg-negative);
+  color: var(--negative);
+}
+
+.confirmText {
+  @include type(paragraph-m);
+  margin: space(300) 0 space(600);
+  color: var(--content-secondary);
+}
+
+.confirmActions {
+  display: grid;
+  gap: space(200);
+
+  > button {
+    width: 100%;
+  }
+}

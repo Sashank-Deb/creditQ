@@ -1,5 +1,6 @@
 /**
- * Add-card flow state (design v5: step 1 "Which card is it?", step 2 "When is it due?").
+ * Add-card flow state: step 1 "Which card is it?", step 2 "When is it due?",
+ * step 3 "When was this bill generated?" (the statement date that starts each monthly cycle).
  * One question per step, inline errors, no amounts anywhere. Pure, so it is unit-tested.
  */
 import {
@@ -8,20 +9,22 @@ import {
   planPayDays,
   validateCardDetails,
   validateDueDate,
+  validateStatementDate,
   type CivilDate,
 } from '@creditq/core';
 
 /** At most five quick starts: Hick's law. "Other" is just typing a name. */
 export const QUICK_ISSUERS = ['HDFC', 'ICICI', 'SBI', 'Axis', 'Amex'] as const;
 
-type Field = 'name' | 'last4' | 'dueDate';
+type Field = 'name' | 'last4' | 'dueDate' | 'statementDate';
 
 export interface AddCardState {
   today: CivilDate;
-  step: 1 | 2 | 'saving';
+  step: 1 | 2 | 3 | 'saving';
   name: string;
   last4: string;
   dueDate: string;
+  statementDate: string;
   errors: Partial<Record<Field, string>>;
 }
 
@@ -38,6 +41,7 @@ export const initialAddCard = (today: CivilDate): AddCardState => ({
   name: '',
   last4: '',
   dueDate: '',
+  statementDate: '',
   errors: {},
 });
 
@@ -56,9 +60,11 @@ export const addCardReducer = (state: AddCardState, action: AddCardAction): AddC
     case 'pickIssuer':
       return { ...state, name: `${action.issuer} `, errors: withoutError(state.errors, 'name') };
     case 'back':
-      return state.step === 2 ? { ...state, step: 1, errors: {} } : state;
+      if (state.step === 2) return { ...state, step: 1, errors: {} };
+      if (state.step === 3) return { ...state, step: 2, errors: {} };
+      return state;
     case 'failed':
-      return { ...state, step: 2, errors: { dueDate: action.message } };
+      return { ...state, step: 3, errors: { statementDate: action.message } };
     case 'next': {
       if (state.step === 1) {
         const r = validateCardDetails({ name: state.name, last4: state.last4 });
@@ -68,6 +74,10 @@ export const addCardReducer = (state: AddCardState, action: AddCardAction): AddC
       }
       if (state.step === 2) {
         const r = validateDueDate(state.dueDate, state.today);
+        return r.ok ? { ...state, step: 3, errors: {} } : { ...state, errors: r.errors };
+      }
+      if (state.step === 3) {
+        const r = validateStatementDate(state.statementDate, state.dueDate);
         return r.ok ? { ...state, step: 'saving', errors: {} } : { ...state, errors: r.errors };
       }
       return state;

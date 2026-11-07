@@ -1,0 +1,143 @@
+@use '../../styles/tokens' as *;
+@use '../../styles/ui' as *;
+
+$strip: 56px; // visible part of each stacked card
+
+.section {
+  display: grid;
+  gap: space(300);
+  margin-top: space(400);
+}
+
+.heading {
+  @include type(label-m);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: space(200);
+  color: var(--content-secondary);
+}
+
+.count {
+  @include type(label-xs);
+  min-width: 20px;
+  height: 20px;
+  padding: 0 space(100);
+  border-radius: radius(tag);
+  display: inline-grid;
+  place-items: center;
+  background: var(--bg-tertiary);
+  color: var(--content-primary);
+}
+
+.deck {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+}
+
+@each $tone, $n in ('forest': 1, 'terracotta': 2, 'sand': 3, 'olive': 4, 'slate': 5, 'teal': 6) {
+  .tone-#{$tone} {
+    --l: var(--tile-#{$n}-line);
+    color: var(--tile-#{$n}-ink);
+    background:
+      repeating-linear-gradient(45deg, var(--l) 0 1px, transparent 1px 12px),
+      repeating-linear-gradient(-45deg, var(--l) 0 1px, transparent 1px 12px),
+      linear-gradient(135deg, var(--tile-#{$n}-from), var(--tile-#{$n}-to));
+  }
+}
+
+// Each card is a full-height tile; all but the first slide up under the one above,
+// leaving a $strip-tall edge visible, like a fanned deck.
+.card {
+  position: relative;
+  height: 152px;
+  border-radius: radius(large);
+  border: 1px solid var(--border-tile);
+  box-shadow: 0 -2px 8px rgb(0 0 0 / 0.12);
+  overflow: hidden;
+  @include motion(transform, move);
+
+  & + & {
+    margin-top: calc(#{$strip} - 152px);
+  }
+}
+
+.top {
+  @include elevation(200);
+}
+
+.strip {
+  @include state-layer;
+  width: 100%;
+  height: $strip;
+  padding: 0 space(500);
+  border: 0;
+  background: transparent;
+  color: inherit;
+  display: flex;
+  align-items: center;
+  gap: space(300);
+  text-align: left;
+}
+
+.face {
+  height: 100%;
+  box-sizing: border-box;
+  padding: space(400) space(500);
+  display: flex;
+  flex-direction: column;
+  gap: space(300);
+}
+
+.row {
+  height: 24px;
+  display: flex;
+  align-items: center;
+  gap: space(300);
+}
+
+.name {
+  @include type(heading-xs);
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.digits {
+  @include type(mono-xs);
+  white-space: nowrap;
+}
+
+.label {
+  @include type(heading-s);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: space(200);
+}
+
+.tick {
+  @include type(label-s);
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: inline-grid;
+  place-items: center;
+  background: rgb(255 255 255 / 0.24);
+}
+
+.edit {
+  @include button-base;
+  @include type(label-s);
+  align-self: flex-start;
+  height: 36px;
+  margin-top: auto;
+  padding: 0 space(400);
+  background: transparent;
+  color: inherit;
+  box-shadow: inset 0 0 0 1.5px currentColor;
+}

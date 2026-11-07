@@ -27,6 +27,7 @@ export const buildReminderPlan = ({ today, cards, bills, settings }: PlanInput):
     cardId: b.cardId,
     dueDate: b.dueDate,
     status: b.status,
+    ...(b.statementDate ? { availableFrom: b.statementDate } : {}),
   }));
   const { groups } = planPayDays({
     today,

@@ -111,3 +111,15 @@ describe('dueToShow', () => {
     ]);
   });
 });
+
+describe('statement dates', () => {
+  it('never plans a pay day before the bill is generated', () => {
+    const plan = buildReminderPlan({
+      today: '2026-11-01',
+      cards,
+      bills: [{ ...bill('a1', 'a', '2026-11-20'), statementDate: '2026-11-18' }],
+      settings,
+    });
+    expect(plan[0]?.date).toBe('2026-11-18');
+  });
+});

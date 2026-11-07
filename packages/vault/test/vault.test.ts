@@ -209,3 +209,105 @@ describe('vault: reminder settings', () => {
     vault.close();
   });
 });
+
+describe('vault: monthly cycle with statement dates', () => {
+  it('stores the statement date on the bill and the statement day on the card', async () => {
+    const vault = await openVault(fresh());
+    const { card, bill } = await vault.addCard({
+      name: 'HDFC Regalia',
+      last4: '4821',
+      statementDate: '2026-11-02',
+      dueDate: '2026-11-20',
+    });
+    expect(card).toMatchObject({ statementDay: 2, dueDay: 20 });
+    expect(bill).toMatchObject({ statementDate: '2026-11-02', dueDate: '2026-11-20' });
+    vault.close();
+  });
+
+  it('rejects a statement date that does not fit the due date', async () => {
+    const vault = await openVault(fresh());
+    await expect(
+      vault.addCard({
+        name: 'HDFC',
+        last4: '4821',
+        statementDate: '2026-11-25',
+        dueDate: '2026-11-20',
+      }),
+    ).rejects.toThrow(/before it is due/);
+    vault.close();
+  });
+
+  it('opens next month with both dates rolled forward', async () => {
+    const vault = await openVault(fresh());
+    const { bill } = await vault.addCard({
+      name: 'HDFC',
+      last4: '4821',
+      statementDate: '2026-12-31',
+      dueDate: '2027-01-20',
+    });
+    const { nextBill } = await vault.markPaid(bill.id, { amountPaise: null, paidOn: '2027-01-15' });
+    expect(nextBill).toMatchObject({ statementDate: '2027-01-31', dueDate: '2027-02-20' });
+    vault.close();
+  });
+
+  it('still works for cards added before statement dates existed', async () => {
+    const vault = await openVault(fresh());
+    const { bill } = await vault.addCard({ name: 'Old', last4: '1111', dueDate: '2026-11-20' });
+    const { nextBill } = await vault.markPaid(bill.id, { amountPaise: null, paidOn: '2026-11-15' });
+    expect(nextBill.statementDate).toBeUndefined();
+    expect(nextBill.dueDate).toBe('2026-12-20');
+    vault.close();
+  });
+});
+
+describe('vault: edit and remove a card', () => {
+  it('edits the name, last 4 and the current bill dates', async () => {
+    const vault = await openVault(fresh());
+    const { card } = await vault.addCard({ name: 'HDFC', last4: '4821', dueDate: '2026-11-20' });
+    const updated = await vault.updateCard(card.id, {
+      name: 'HDFC Infinia',
+      last4: '9999',
+      statementDate: '2026-11-03',
+      dueDate: '2026-11-21',
+    });
+    expect(updated).toMatchObject({
+      name: 'HDFC Infinia',
+      last4: '9999',
+      statementDay: 3,
+      dueDay: 21,
+    });
+    const [bill] = await vault.listBills();
+    expect(bill).toMatchObject({
+      statementDate: '2026-11-03',
+      dueDate: '2026-11-21',
+      status: 'open',
+    });
+    vault.close();
+  });
+
+  it('edits the upcoming bill when the current one is already paid', async () => {
+    const vault = await openVault(fresh());
+    const { bill } = await vault.addCard({ name: 'HDFC', last4: '4821', dueDate: '2026-11-20' });
+    await vault.markPaid(bill.id, { amountPaise: 100, paidOn: '2026-11-15' });
+    const cardId = (await vault.listCards())[0]!.id;
+    await vault.updateCard(cardId, { name: 'HDFC', last4: '4821', dueDate: '2026-12-22' });
+    const bills = await vault.listBills();
+    expect(bills.map((b) => [b.dueDate, b.status])).toEqual([
+      ['2026-11-20', 'paid'],
+      ['2026-12-22', 'open'],
+    ]);
+    vault.close();
+  });
+
+  it('removes the card with its bills and logged payments', async () => {
+    const vault = await openVault(fresh());
+    const keep = await vault.addCard({ name: 'Keep', last4: '1111', dueDate: '2026-11-20' });
+    const gone = await vault.addCard({ name: 'Gone', last4: '2222', dueDate: '2026-11-21' });
+    await vault.markPaid(gone.bill.id, { amountPaise: 5000, paidOn: '2026-11-15' });
+    await vault.removeCard(gone.card.id);
+    expect((await vault.listCards()).map((c) => c.name)).toEqual(['Keep']);
+    expect((await vault.listBills()).map((b) => b.cardId)).toEqual([keep.card.id]);
+    expect(await vault.listPayments()).toEqual([]);
+    vault.close();
+  });
+});

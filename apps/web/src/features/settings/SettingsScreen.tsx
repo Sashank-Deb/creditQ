@@ -1,6 +1,6 @@
 'use client';
 
-import Link from 'next/link';
+import BackButton from '@/components/BackButton';
 import { useRef, useState, useSyncExternalStore } from 'react';
 import { istInstant, toIcs } from '@creditq/core';
 import { buildReminderPlan } from '@/features/reminders/reminder-plan';
@@ -73,9 +73,7 @@ export default function SettingsScreen() {
   return (
     <main className={styles.screen}>
       <header className={styles.topBar}>
-        <Link href="/" className={styles.back}>
-          Back
-        </Link>
+        <BackButton href="/" />
       </header>
       <h1 className={styles.title}>Settings</h1>
 

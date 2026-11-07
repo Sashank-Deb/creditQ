@@ -92,6 +92,13 @@
   place-items: center;
 }
 
+.overview {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: space(300);
+  align-items: stretch;
+}
+
 .banner {
   @include type(paragraph-s);
   margin: 0;
@@ -99,6 +106,8 @@
   border-radius: radius(default);
   background: var(--bg-banner);
   border: 1px solid var(--border-opaque);
+  display: flex;
+  align-items: center;
 }
 
 // ---- card tiles ----

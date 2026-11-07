@@ -1,6 +1,8 @@
 /**
- * Picks the one bill each card shows on Home: a bill paid this cycle stays visible as
- * "Paid" until its due date passes, then next month's open bill takes over.
+ * Picks the one bill each card shows on Home, following the monthly cycle:
+ * - after a bill is paid, the card sits in the paid deck until its next bill is generated
+ *   (the next statement date), then comes back as due on its own;
+ * - cards added before statement dates existed stay "Paid" until the paid due date passes.
  */
 import { compareDates, type CivilDate } from '@creditq/core';
 import type { Bill, Card, Payment } from '@creditq/vault';
@@ -25,24 +27,35 @@ export const currentBills = (
     const mine = bills
       .filter((b) => b.cardId === card.id)
       .sort((a, b) => compareDates(a.dueDate, b.dueDate));
-    const paidThisCycle = mine.find(
-      (b) => b.status === 'paid' && compareDates(b.dueDate, today) >= 0,
-    );
     const open = mine.find((b) => b.status === 'open');
-    const shown = paidThisCycle ?? open;
+    const lastPaid = mine.filter((b) => b.status === 'paid').at(-1);
+
+    // Is the open bill live yet? With a statement date: from that date. Without one
+    // (older cards): once the paid bill's due date has passed. A card with no paid
+    // bill yet is always live, so a brand-new card shows as due straight away.
+    let openIsLive = Boolean(open);
+    if (open && lastPaid) {
+      openIsLive = open.statementDate
+        ? compareDates(open.statementDate, today) <= 0
+        : compareDates(lastPaid.dueDate, today) < 0;
+    }
+
+    const shown = openIsLive ? open : (lastPaid ?? open);
     if (shown) {
       const paymentId = paymentFor.get(shown.id);
+      const isPaid = shown.status === 'paid';
       out.push({
         id: card.id,
         name: card.name,
         last4: card.last4,
-        holder: '',
         tone: card.tone,
         dueDate: shown.dueDate,
+        ...(shown.statementDate ? { statementDate: shown.statementDate } : {}),
         billId: shown.id,
         ...(paymentId ? { paymentId } : {}),
+        ...(isPaid && open?.statementDate ? { nextStatementDate: open.statementDate } : {}),
       });
-      if (shown.status === 'paid') paidCardIds.push(card.id);
+      if (isPaid) paidCardIds.push(card.id);
     }
   }
   return { cards: out, paidCardIds };

@@ -165,7 +165,11 @@
 }
 
 .confirm {
+  // Tailwind's base styles zero dialog margins; restore centring.
+  margin: auto;
+  width: calc(100% - 32px);
   max-width: 360px;
+  box-sizing: border-box;
   padding: space(600);
   border: 0;
   border-radius: radius(large);

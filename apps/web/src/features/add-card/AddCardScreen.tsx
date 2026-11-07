@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useReducer, useState } from 'react';
 import { formatShortDate } from '@creditq/core';
 import { TILE_TONES, type TileTone } from '@creditq/vault';
+import BackButton from '@/components/BackButton';
 import CardTile from '@/components/CardTile';
 import { useTodayInIndia, useVaultAction, useVaultData } from '@/lib/vault-client';
 import {
@@ -38,7 +39,14 @@ function Flow({ today, onAgain }: { today: string; onAgain: () => void }) {
     dispatch({ type: 'next' });
     if (next.step !== 'saving') return;
     try {
-      await act((v) => v.addCard({ name: next.name, last4: next.last4, dueDate: next.dueDate }));
+      await act((v) =>
+        v.addCard({
+          name: next.name,
+          last4: next.last4,
+          dueDate: next.dueDate,
+          statementDate: next.statementDate,
+        }),
+      );
       setSavedName(next.name);
     } catch (e) {
       dispatch({ type: 'failed', message: (e as Error).message });
@@ -81,27 +89,24 @@ function Flow({ today, onAgain }: { today: string; onAgain: () => void }) {
   }
 
   const step1 = state.step === 1;
+  const stepNumber = state.step === 'saving' ? 3 : state.step;
   return (
     <main className={styles.screen}>
       <header className={styles.topBar}>
         {step1 ? (
-          <Link href="/" className={styles.back}>
-            Cancel
-          </Link>
+          <BackButton href="/" label="Cancel" />
         ) : (
-          <button type="button" className={styles.back} onClick={() => dispatch({ type: 'back' })}>
-            Back
-          </button>
+          <BackButton onClick={() => dispatch({ type: 'back' })} />
         )}
         <div
           className={styles.progress}
           role="progressbar"
           aria-label="Add card progress"
           aria-valuemin={1}
-          aria-valuemax={2}
-          aria-valuenow={step1 ? 1 : 2}
+          aria-valuemax={3}
+          aria-valuenow={stepNumber}
         >
-          <span style={{ width: step1 ? '50%' : '100%' }} />
+          <span style={{ width: `${(stepNumber / 3) * 100}%` }} />
         </div>
       </header>
 
@@ -164,7 +169,8 @@ function Flow({ today, onAgain }: { today: string; onAgain: () => void }) {
             <FieldError id="card-last4-error" message={state.errors.last4} />
             <p className={styles.soon}>Import from statement (coming soon)</p>
           </>
-        ) : (
+        ) : null}
+        {state.step === 2 && (
           <>
             <h1 className={styles.title}>When is it due?</h1>
             <label className={styles.label} htmlFor="card-due">
@@ -186,9 +192,34 @@ function Flow({ today, onAgain }: { today: string; onAgain: () => void }) {
             <FieldError id="card-due-error" message={state.errors.dueDate} />
           </>
         )}
+        {(state.step === 3 || state.step === 'saving') && (
+          <>
+            <h1 className={styles.title}>When was this bill generated?</h1>
+            <label className={styles.label} htmlFor="card-statement">
+              Statement date (on the same bill)
+            </label>
+            <input
+              id="card-statement"
+              type="date"
+              className={styles.input}
+              value={state.statementDate}
+              max={state.dueDate}
+              aria-invalid={Boolean(state.errors.statementDate)}
+              aria-describedby="card-statement-hint card-statement-error"
+              onChange={(e) =>
+                dispatch({ type: 'set', field: 'statementDate', value: e.target.value })
+              }
+            />
+            <p id="card-statement-hint" className={styles.hint}>
+              Your monthly cycle starts here. After you pay, the card waits in the paid deck and
+              comes back as due on this date next month.
+            </p>
+            <FieldError id="card-statement-error" message={state.errors.statementDate} />
+          </>
+        )}
         <div className={styles.dock}>
           <button type="submit" className={styles.btnPrimary} disabled={state.step === 'saving'}>
-            {step1 ? 'Next' : 'Save card'}
+            {state.step === 1 || state.step === 2 ? 'Next' : 'Save card'}
           </button>
         </div>
       </form>

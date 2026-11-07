@@ -1,0 +1,14 @@
+@use '../styles/tokens' as *;
+@use '../styles/ui' as *;
+
+.back {
+  @include button-base;
+  @include type(label-m);
+  height: 44px;
+  padding: 0 space(400) 0 space(300);
+  gap: space(100);
+  background: var(--bg-secondary);
+  color: var(--content-primary);
+  border: 1px solid var(--border-opaque);
+  @include elevation(100);
+}

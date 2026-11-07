@@ -2,30 +2,9 @@ import { describe, expect, it } from 'vitest';
 import { buildHomeView, type CardRecord } from '../src/features/home/home-view';
 
 const cards: CardRecord[] = [
-  {
-    id: 'hdfc',
-    name: 'HDFC Regalia',
-    last4: '4821',
-    holder: 'Meera Iyer',
-    dueDate: '2026-03-08',
-    tone: 'forest',
-  },
-  {
-    id: 'axis',
-    name: 'Axis Flipkart',
-    last4: '9033',
-    holder: 'Meera Iyer',
-    dueDate: '2026-03-10',
-    tone: 'terracotta',
-  },
-  {
-    id: 'sbi',
-    name: 'SBI Cashback',
-    last4: '1207',
-    holder: 'Meera Iyer',
-    dueDate: '2026-03-12',
-    tone: 'sand',
-  },
+  { id: 'hdfc', name: 'HDFC Regalia', last4: '4821', dueDate: '2026-03-08', tone: 'forest' },
+  { id: 'axis', name: 'Axis Flipkart', last4: '9033', dueDate: '2026-03-10', tone: 'terracotta' },
+  { id: 'sbi', name: 'SBI Cashback', last4: '1207', dueDate: '2026-03-12', tone: 'sand' },
 ];
 
 describe('buildHomeView', () => {
@@ -38,18 +17,32 @@ describe('buildHomeView', () => {
       ['axis', 'Due Tue, 10 Mar', false, 'Same pay day'],
       ['sbi', 'Due Thu, 12 Mar', false, 'Same pay day'],
     ]);
+    expect(view.deck).toEqual([]);
     expect(JSON.stringify(view)).not.toMatch(/₹|amount/i);
   });
 
-  it('moves the focus to the next unpaid card and drops paid ones from due soon', () => {
+  it('puts each card under a brand-style monogram, never a logo', () => {
+    const view = buildHomeView({ today: '2026-02-26', cards, paidCardIds: [] });
+    expect(view.tiles.map((t) => t.issuer.monogram)).toEqual(['HDFC', 'AXIS', 'SBI']);
+  });
+
+  it('moves paid cards into the deck and the focus to the next unpaid card', () => {
     const view = buildHomeView({ today: '2026-03-03', cards, paidCardIds: ['hdfc'] });
     expect(view.dueSoonCount).toBe(2);
-    expect(view.tiles.map((t) => [t.cardId, t.isFocus, t.isPaid])).toEqual([
-      ['axis', true, false],
-      ['sbi', false, false],
-      ['hdfc', false, true],
+    expect(view.tiles.map((t) => [t.cardId, t.isFocus])).toEqual([
+      ['axis', true],
+      ['sbi', false],
     ]);
     expect(view.tiles[0]?.pill).toBe('Pay day today');
+    expect(view.deck.map((d) => [d.cardId, d.label])).toEqual([['hdfc', 'Paid']]);
+  });
+
+  it('tells paid cards when their next bill arrives', () => {
+    const withNext = cards.map((c) =>
+      c.id === 'hdfc' ? { ...c, nextStatementDate: '2026-03-20' } : c,
+    );
+    const view = buildHomeView({ today: '2026-03-03', cards: withNext, paidCardIds: ['hdfc'] });
+    expect(view.deck[0]?.label).toBe('Paid · next bill Fri, 20 Mar');
   });
 
   it('shows an all-paid state', () => {
@@ -59,6 +52,8 @@ describe('buildHomeView', () => {
       paidCardIds: ['hdfc', 'axis', 'sbi'],
     });
     expect(view.dueSoonCount).toBe(0);
+    expect(view.tiles).toEqual([]);
+    expect(view.deck).toHaveLength(3);
     expect(view.banner).toBe('All paid. Nothing to do until your next statement.');
   });
 
@@ -66,5 +61,36 @@ describe('buildHomeView', () => {
     const view = buildHomeView({ today: '2026-03-03', cards: [], paidCardIds: [] });
     expect(view.isEmpty).toBe(true);
     expect(view.tiles).toEqual([]);
+  });
+
+  it('marks the pay day and due dates on a calendar for the pay day month', () => {
+    const view = buildHomeView({ today: '2026-02-26', cards, paidCardIds: [] });
+    expect(view.calendar).toEqual({
+      month: '2026-03',
+      title: 'March 2026',
+      today: '2026-02-26',
+      payDays: ['2026-03-03'],
+      dueDates: ['2026-03-08', '2026-03-10', '2026-03-12'],
+    });
+  });
+
+  it('shows the current month on the calendar when everything is paid', () => {
+    const view = buildHomeView({
+      today: '2026-03-03',
+      cards,
+      paidCardIds: ['hdfc', 'axis', 'sbi'],
+    });
+    expect(view.calendar).toMatchObject({ month: '2026-03', payDays: [], dueDates: [] });
+  });
+});
+
+describe('statement dates on Home', () => {
+  it('never shows a pay day before the bill is generated', () => {
+    const view = buildHomeView({
+      today: '2026-11-01',
+      cards: [{ ...cards[0], dueDate: '2026-11-20', statementDate: '2026-11-18' }],
+      paidCardIds: [],
+    });
+    expect(view.banner).toBe('Reminders on. Pay day: Wed, 18 Nov at 9:00 am.');
   });
 });

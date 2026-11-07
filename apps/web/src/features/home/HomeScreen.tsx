@@ -7,6 +7,8 @@ import CardTile, { cardTileStyles as tileStyles } from '@/components/CardTile';
 import { useTodayInIndia, useVaultAction, useVaultData } from '@/lib/vault-client';
 import SpendsView from '@/features/spends/SpendsView';
 import { currentBills } from './current-bills';
+import MiniCalendar from './MiniCalendar';
+import PaidDeck from './PaidDeck';
 import { buildHomeView } from './home-view';
 import styles from './HomeScreen.module.scss';
 
@@ -139,9 +141,12 @@ export default function HomeScreen() {
       )}
       {tab === 'due' && !view.isEmpty && (
         <>
-          <p className={styles.banner} role="status">
-            {view.banner}
-          </p>
+          <div className={styles.overview}>
+            <p className={styles.banner} role="status">
+              {view.banner}
+            </p>
+            <MiniCalendar calendar={view.calendar} />
+          </div>
           <ol className={styles.stack}>
             {view.tiles.map((t) => (
               <li key={t.cardId}>
@@ -150,8 +155,9 @@ export default function HomeScreen() {
                   last4={t.last4}
                   tone={t.tone}
                   dueLabel={t.dueLabel}
+                  issuer={t.issuer}
                   focus={t.isFocus}
-                  paid={t.isPaid}
+                  editHref={`/card?id=${encodeURIComponent(t.cardId)}`}
                   actions={
                     t.isFocus ? (
                       <>
@@ -169,7 +175,7 @@ export default function HomeScreen() {
                     ) : null
                   }
                 />
-                {!t.isPaid && (
+                {t.pill && (
                   <span className={styles.pill}>
                     <span className={styles.dot} aria-hidden="true" />
                     {t.pill}
@@ -178,6 +184,7 @@ export default function HomeScreen() {
               </li>
             ))}
           </ol>
+          <PaidDeck cards={view.deck} />
         </>
       )}
 

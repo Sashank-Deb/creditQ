@@ -12,7 +12,13 @@ const run = (...actions: Parameters<typeof addCardReducer>[1][]) =>
 
 describe('add-card flow (2 steps, one question each)', () => {
   it('starts on step 1 with nothing filled', () => {
-    expect(initialAddCard(today)).toMatchObject({ step: 1, name: '', last4: '', dueDate: '' });
+    expect(initialAddCard(today)).toMatchObject({
+      step: 1,
+      name: '',
+      last4: '',
+      dueDate: '',
+      statementDate: '',
+    });
   });
 
   it('offers at most 5 quick-start issuers plus nothing else (Hick)', () => {
@@ -39,30 +45,51 @@ describe('add-card flow (2 steps, one question each)', () => {
     expect(run({ type: 'set', field: 'last4', value: '90a33x7' }).last4).toBe('9033');
   });
 
-  it('moves to step 2, then validates the due date before saving', () => {
+  it('asks the due date on step 2, then the statement date on step 3, before saving', () => {
     const s1 = run(
       { type: 'set', field: 'name', value: 'Axis Flipkart' },
       { type: 'set', field: 'last4', value: '9033' },
       { type: 'next' },
     );
     expect(s1.step).toBe(2);
-    const bad = addCardReducer(
+    const pastDue = addCardReducer(
       addCardReducer(s1, { type: 'set', field: 'dueDate', value: '2026-02-20' }),
-      {
-        type: 'next',
-      },
+      { type: 'next' },
     );
-    expect(bad).toMatchObject({
+    expect(pastDue).toMatchObject({
       step: 2,
       errors: { dueDate: 'That date has passed. Enter your next due date.' },
     });
-    const ok = addCardReducer(
+    const s2 = addCardReducer(
       addCardReducer(s1, { type: 'set', field: 'dueDate', value: '2026-03-10' }),
-      {
-        type: 'next',
-      },
+      { type: 'next' },
+    );
+    expect(s2.step).toBe(3);
+    const badStatement = addCardReducer(
+      addCardReducer(s2, { type: 'set', field: 'statementDate', value: '2026-03-12' }),
+      { type: 'next' },
+    );
+    expect(badStatement).toMatchObject({
+      step: 3,
+      errors: { statementDate: 'The bill is generated before it is due. Check the dates.' },
+    });
+    const ok = addCardReducer(
+      addCardReducer(s2, { type: 'set', field: 'statementDate', value: '2026-02-18' }),
+      { type: 'next' },
     );
     expect(ok).toMatchObject({ step: 'saving', errors: {} });
+  });
+
+  it('back from step 3 returns to step 2 with the dates kept', () => {
+    const s = run(
+      { type: 'set', field: 'name', value: 'SBI' },
+      { type: 'set', field: 'last4', value: '1207' },
+      { type: 'next' },
+      { type: 'set', field: 'dueDate', value: '2026-03-10' },
+      { type: 'next' },
+      { type: 'back' },
+    );
+    expect(s).toMatchObject({ step: 2, dueDate: '2026-03-10' });
   });
 
   it('back from step 2 keeps what was typed', () => {

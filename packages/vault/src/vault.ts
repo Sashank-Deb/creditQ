@@ -8,7 +8,12 @@
  * already inject their own key via `options.key`.
  */
 import Dexie, { type Table } from 'dexie';
-import { nextMonthlyDueDate, validateCardDetails, type CivilDate } from '@creditq/core';
+import {
+  nextMonthlyDueDate,
+  validateCardDetails,
+  validateStatementDate,
+  type CivilDate,
+} from '@creditq/core';
 import { createAesGcmCodec, generateDeviceKey, type Sealed } from './codec';
 
 export const TILE_TONES = ['forest', 'terracotta', 'sand', 'olive', 'slate', 'teal'] as const;
@@ -21,6 +26,8 @@ export interface Card {
   tone: TileTone;
   /** Preferred due day of month, so a "31st" card returns to the 31st after February. */
   dueDay: number;
+  /** Day of month the statement (bill) is generated; absent on cards added before v2. */
+  statementDay?: number;
   createdAt: number;
 }
 
@@ -30,6 +37,8 @@ export interface Bill {
   id: string;
   cardId: string;
   dueDate: CivilDate;
+  /** When this bill is generated; the card comes back as due from this date. */
+  statementDate?: CivilDate;
   status: BillState;
   createdAt: number;
 }
@@ -67,7 +76,10 @@ export interface NewCard {
   name: string;
   last4: string;
   dueDate: CivilDate;
+  statementDate?: CivilDate;
 }
+
+const dayOf = (d: CivilDate): number => Number(d.slice(8, 10));
 
 export interface VaultOptions {
   name?: string;
@@ -155,19 +167,25 @@ export const openVault = async (options: VaultOptions = {}) => {
   const addCard = async (input: NewCard): Promise<{ card: Card; bill: Bill }> => {
     const checked = validateCardDetails(input);
     if (!checked.ok) throw new Error(Object.values(checked.errors).join(' '));
+    if (input.statementDate !== undefined) {
+      const s = validateStatementDate(input.statementDate, input.dueDate);
+      if (!s.ok) throw new Error(Object.values(s.errors).join(' '));
+    }
     const t = now();
     const count = await db.cards.count();
     const card: Card = {
       id: newId(),
       ...checked.value,
       tone: TILE_TONES[count % TILE_TONES.length] as TileTone,
-      dueDay: Number(input.dueDate.slice(8, 10)),
+      dueDay: dayOf(input.dueDate),
+      ...(input.statementDate ? { statementDay: dayOf(input.statementDate) } : {}),
       createdAt: t,
     };
     const bill: Bill = {
       id: newId(),
       cardId: card.id,
       dueDate: input.dueDate,
+      ...(input.statementDate ? { statementDate: input.statementDate } : {}),
       status: 'open',
       createdAt: t,
     };
@@ -198,6 +216,9 @@ export const openVault = async (options: VaultOptions = {}) => {
       id: newId(),
       cardId: bill.cardId,
       dueDate: nextMonthlyDueDate(bill.dueDate, card.dueDay),
+      ...(bill.statementDate
+        ? { statementDate: nextMonthlyDueDate(bill.statementDate, card.statementDay) }
+        : {}),
       status: 'open',
       createdAt: t,
     };
@@ -241,6 +262,61 @@ export const openVault = async (options: VaultOptions = {}) => {
     });
   };
 
+  const cardRowFor = async (card: Card): Promise<CardRow> => ({
+    id: card.id,
+    v: PAYLOAD_V,
+    status: 'active',
+    ...(await seal('cards', card.id, card)),
+  });
+
+  /** Edits a card and the dates of its current bill (the open one, else the latest). */
+  const updateCard = async (cardId: string, input: NewCard): Promise<Card> => {
+    const checked = validateCardDetails(input);
+    if (!checked.ok) throw new Error(Object.values(checked.errors).join(' '));
+    if (input.statementDate !== undefined) {
+      const s = validateStatementDate(input.statementDate, input.dueDate);
+      if (!s.ok) throw new Error(Object.values(s.errors).join(' '));
+    }
+    const row = await db.cards.get(cardId);
+    if (!row) throw new Error('Card not found');
+    const old = await read<Card>('cards', row);
+    const card: Card = {
+      id: old.id,
+      tone: old.tone,
+      createdAt: old.createdAt,
+      ...checked.value,
+      dueDay: dayOf(input.dueDate),
+      ...(input.statementDate ? { statementDay: dayOf(input.statementDate) } : {}),
+    };
+    const bills = (await listBills()).filter((b) => b.cardId === cardId);
+    const target = bills.find((b) => b.status === 'open') ?? bills.at(-1);
+    const newCardRow = await cardRowFor(card);
+    const newBillRow = target
+      ? await billRow({
+          id: target.id,
+          cardId: target.cardId,
+          status: target.status,
+          createdAt: target.createdAt,
+          dueDate: input.dueDate,
+          ...(input.statementDate ? { statementDate: input.statementDate } : {}),
+        })
+      : null;
+    await db.transaction('rw', db.cards, db.bills, async () => {
+      await db.cards.put(newCardRow);
+      if (newBillRow) await db.bills.put(newBillRow);
+    });
+    return card;
+  };
+
+  /** Removes a card with all its bills and logged payments. Cannot be undone. */
+  const removeCard = async (cardId: string): Promise<void> => {
+    await db.transaction('rw', db.cards, db.bills, db.payments, async () => {
+      await db.bills.where('cardId').equals(cardId).delete();
+      await db.payments.where('cardId').equals(cardId).delete();
+      await db.cards.delete(cardId);
+    });
+  };
+
   // Settings are not sensitive (no names, digits or amounts), so they live in plain meta.
   const getSettings = async (): Promise<ReminderSettings> => {
     const row = await db.meta.get('settings');
@@ -268,6 +344,8 @@ export const openVault = async (options: VaultOptions = {}) => {
     listPayments,
     markPaid,
     undoPayment,
+    updateCard,
+    removeCard,
     getSettings,
     saveSettings,
     /** Deletes the whole database, including the device key. */
