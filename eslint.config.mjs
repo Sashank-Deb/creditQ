@@ -3,6 +3,7 @@ import js from '@eslint/js';
 import prettier from 'eslint-config-prettier';
 import { configs, plugins } from 'eslint-config-airbnb-extended';
 import { createTypeScriptImportResolver } from 'eslint-import-resolver-typescript';
+import globals from 'globals';
 
 // Airbnb's React and Next presets apply to the web app only.
 const webOnly = (list) => list.map((c) => ({ ...c, files: ['apps/web/**/*.{ts,tsx}'] }));
@@ -97,6 +98,15 @@ export default [
     files: ['**/test/**/*.ts', '**/*.test.ts', '**/vitest.config.ts'],
     rules: {
       'import-x/no-extraneous-dependencies': ['error', { devDependencies: true }],
+    },
+  },
+  {
+    name: 'creditq/service-worker',
+    files: ['apps/web/public/sw.js'],
+    languageOptions: { sourceType: 'script', globals: globals.serviceworker },
+    rules: {
+      // `self` is the worker's global scope here, not a confusing alias of window.
+      'no-restricted-globals': 'off',
     },
   },
   prettier,

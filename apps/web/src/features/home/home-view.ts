@@ -49,6 +49,7 @@ export interface HomeInput {
   paidCardIds: readonly string[];
   calendar?: BusinessCalendar;
   reminderTime?: string;
+  leadDays?: number;
 }
 
 const capitalise = (s: string): string => s.charAt(0).toUpperCase() + s.slice(1);
@@ -70,10 +71,17 @@ export const buildHomeView = (input: HomeInput): HomeView => {
   });
   // Until stored groups exist (vault, M1), the plan with every bill unpaid stands in
   // for "previous", so paying one card never pushes the others' pay day later.
-  const previous = planPayDays({ today, calendar, bills: cards.map((c) => toBill(c, 'open')) });
+  const config = { leadDays: input.leadDays ?? 5 };
+  const previous = planPayDays({
+    today,
+    calendar,
+    config,
+    bills: cards.map((c) => toBill(c, 'open')),
+  });
   const plan = planPayDays({
     today,
     calendar,
+    config,
     previous: previous.groups,
     bills: cards.map((c) => toBill(c, paid.has(c.id) ? 'paid' : 'open')),
   });

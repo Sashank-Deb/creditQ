@@ -66,7 +66,10 @@ function Flow({ today, onAgain }: { today: string; onAgain: () => void }) {
           <span className={styles.previewText}>{preview.notification}</span>
         </section>
         <div className={styles.dock}>
-          <Link href="/" className={styles.btnPrimary}>
+          <Link href="/settings" className={styles.btnPrimary}>
+            Set up reminders
+          </Link>
+          <Link href="/" className={styles.btnText}>
             Done
           </Link>
           <button type="button" className={styles.btnText} onClick={onAgain}>

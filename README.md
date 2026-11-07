@@ -26,5 +26,10 @@ corepack pnpm --filter @creditq/web dev
 
 ## Status (M1, in progress)
 
-- Done: grouping engine, reminder dates, Home screen with Mark as paid (amount sheet, Skip, Undo), using sample cards.
-- Next: on-device encrypted vault (Dexie), the 2-step add-card flow, `.ics` export, service-worker notifications, Spends view.
+- Done:
+  - Grouping engine and reminder dates (`packages/core`).
+  - Encrypted on-device vault (`packages/vault`).
+  - 2-step add-card flow; Home with Mark as paid (amount sheet, Skip, Undo).
+  - Reminders: one notice per day at the chosen time; `.ics` export with alarms; service worker plus page-side ticks for notifications; Settings for lead days, card names and delete-all.
+- Known limits: notifications only fire while the browser runs (installed Chrome/Edge may get periodic background ticks), and iOS needs the Home Screen app. The calendar export is the reliable channel.
+- Next: passphrase unlock and recovery code, encrypted backup file, payment-app picker, Spends view, PNG icons for full installability.

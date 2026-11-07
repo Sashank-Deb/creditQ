@@ -46,6 +46,23 @@ export interface Payment {
   createdAt: number;
 }
 
+export type ContentLevel = 'minimal' | 'cards';
+
+export interface ReminderSettings {
+  /** Days before the earliest due date (1 to 10). */
+  leadDays: number;
+  /** India time, 'HH:MM'. */
+  reminderTime: string;
+  /** Card names in notifications and calendar events: off by default (calendars sync to clouds). */
+  contentLevel: ContentLevel;
+}
+
+export const DEFAULT_SETTINGS: ReminderSettings = {
+  leadDays: 5,
+  reminderTime: '09:00',
+  contentLevel: 'minimal',
+};
+
 export interface NewCard {
   name: string;
   last4: string;
@@ -224,6 +241,24 @@ export const openVault = async (options: VaultOptions = {}) => {
     });
   };
 
+  // Settings are not sensitive (no names, digits or amounts), so they live in plain meta.
+  const getSettings = async (): Promise<ReminderSettings> => {
+    const row = await db.meta.get('settings');
+    return { ...DEFAULT_SETTINGS, ...(row?.value as Partial<ReminderSettings> | undefined) };
+  };
+
+  const saveSettings = async (patch: Partial<ReminderSettings>): Promise<ReminderSettings> => {
+    const next = { ...(await getSettings()), ...patch };
+    if (!Number.isInteger(next.leadDays) || next.leadDays < 1 || next.leadDays > 10) {
+      throw new Error('Lead days must be between 1 and 10');
+    }
+    if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(next.reminderTime)) {
+      throw new Error('Reminder time must be HH:MM');
+    }
+    await db.meta.put({ key: 'settings', value: next });
+    return next;
+  };
+
   return {
     /** Dexie instance, for live queries in the UI. */
     db,
@@ -233,6 +268,8 @@ export const openVault = async (options: VaultOptions = {}) => {
     listPayments,
     markPaid,
     undoPayment,
+    getSettings,
+    saveSettings,
     /** Deletes the whole database, including the device key. */
     deleteEverything: async () => {
       db.close();

@@ -37,3 +37,10 @@ export const formatRupees = (paise: number): string => {
   const sign = paise < 0 ? '-' : '';
   return rest === 0 ? `${sign}₹${whole}` : `${sign}₹${whole}.${String(rest).padStart(2, '0')}`;
 };
+
+/** 'HH:MM' (24 h) to "9:00 am" / "7:30 pm". */
+export const formatClock = (hhmm: string): string => {
+  const [h = 0, m = 0] = hhmm.split(':').map(Number);
+  const suffix = h < 12 ? 'am' : 'pm';
+  return `${h % 12 === 0 ? 12 : h % 12}:${String(m).padStart(2, '0')} ${suffix}`;
+};

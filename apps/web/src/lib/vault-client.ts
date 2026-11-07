@@ -1,7 +1,14 @@
 'use client';
 
 import { useCallback, useEffect, useState, useSyncExternalStore } from 'react';
-import { openVault, type Bill, type Card, type Payment, type Vault } from '@creditq/vault';
+import {
+  openVault,
+  type Bill,
+  type Card,
+  type Payment,
+  type ReminderSettings,
+  type Vault,
+} from '@creditq/vault';
 import { todayInIndia } from './today';
 
 let opening: Promise<Vault> | null = null;
@@ -19,6 +26,7 @@ export interface VaultData {
   cards: Card[];
   bills: Bill[];
   payments: Payment[];
+  settings: ReminderSettings;
 }
 
 // Tiny change feed so every screen re-reads after a write in this tab.
@@ -47,12 +55,13 @@ export const useVaultData = (): { data: VaultData | undefined; error: Error | un
     (async () => {
       try {
         const vault = await getVault();
-        const [cards, bills, payments] = await Promise.all([
+        const [cards, bills, payments, settings] = await Promise.all([
           vault.listCards(),
           vault.listBills(),
           vault.listPayments(),
+          vault.getSettings(),
         ]);
-        if (live) setState({ v, data: { cards, bills, payments } });
+        if (live) setState({ v, data: { cards, bills, payments, settings } });
       } catch (e) {
         if (live) setState({ v, error: e as Error });
       }

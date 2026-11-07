@@ -177,3 +177,35 @@ describe('vault: delete everything', () => {
     expect(await Dexie.exists(opts.name)).toBe(false);
   });
 });
+
+describe('vault: reminder settings', () => {
+  it('has sensible defaults: 5 days before, 9:00 am, no card names', async () => {
+    const vault = await openVault(fresh());
+    expect(await vault.getSettings()).toEqual({
+      leadDays: 5,
+      reminderTime: '09:00',
+      contentLevel: 'minimal',
+    });
+    vault.close();
+  });
+
+  it('saves changes and keeps them across sessions', async () => {
+    const opts = fresh();
+    const a = await openVault(opts);
+    await a.saveSettings({ leadDays: 3, contentLevel: 'cards' });
+    a.close();
+    const b = await openVault(opts);
+    expect(await b.getSettings()).toEqual({
+      leadDays: 3,
+      reminderTime: '09:00',
+      contentLevel: 'cards',
+    });
+    b.close();
+  });
+
+  it('rejects lead days outside 1 to 10', async () => {
+    const vault = await openVault(fresh());
+    await expect(vault.saveSettings({ leadDays: 11 })).rejects.toThrow(/1 and 10/);
+    vault.close();
+  });
+});

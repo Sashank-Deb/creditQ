@@ -1,0 +1,192 @@
+@use '../../styles/tokens' as *;
+@use '../../styles/ui' as *;
+
+.screen {
+  @include screen;
+}
+
+.topBar {
+  height: 48px;
+  display: flex;
+  align-items: center;
+}
+
+.back {
+  @include button-text;
+  height: 44px;
+  padding: 0 space(300);
+  color: var(--content-primary);
+}
+
+.title {
+  @include type(heading-l);
+  margin: 0;
+}
+
+.group,
+.privacy {
+  display: flex;
+  flex-direction: column;
+  border-radius: radius(default);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-opaque);
+}
+
+.privacy {
+  gap: space(300);
+  padding: space(400);
+  background: var(--bg-positive);
+}
+
+.groupTitle {
+  @include type(heading-xs);
+  margin: 0;
+}
+
+.group > .groupTitle {
+  padding: space(400) space(400) space(200);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: space(400);
+  padding: space(400);
+  border-top: 1px solid var(--border-transparent);
+
+  > div:first-child {
+    display: flex;
+    flex-direction: column;
+    gap: space(100);
+    min-width: 0;
+  }
+}
+
+.rowTitle {
+  @include type(label-m);
+  margin: 0;
+}
+
+.rowHint {
+  @include type(paragraph-s);
+  margin: 0;
+  color: var(--content-secondary);
+}
+
+.rowOk {
+  @include type(label-s);
+  margin: space(100) 0 0;
+  color: var(--positive);
+}
+
+.btnSecondary {
+  @include button-base;
+  height: 40px;
+  padding: 0 space(400);
+  flex-shrink: 0;
+  background: transparent;
+  color: var(--content-primary);
+  box-shadow: inset 0 0 0 1.5px var(--border-selected);
+}
+
+.btnDanger {
+  @include button-base;
+  align-self: flex-start;
+  background: var(--negative);
+  color: #fff;
+}
+
+.btnText {
+  @include button-text;
+}
+
+.stepper {
+  display: flex;
+  align-items: center;
+  gap: space(200);
+  flex-shrink: 0;
+
+  button {
+    @include button-base;
+    @include type(heading-xs);
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    background: var(--bg-tertiary);
+    color: var(--content-primary);
+  }
+
+  span {
+    @include type(label-l);
+    min-width: 24px;
+    text-align: center;
+  }
+}
+
+.switch {
+  appearance: none;
+  flex-shrink: 0;
+  width: 48px;
+  height: 28px;
+  margin: 0;
+  border-radius: radius(pill);
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-opaque);
+  position: relative;
+  cursor: pointer;
+  @include motion(background-color);
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--content-secondary);
+    @include motion((transform, background-color), move);
+  }
+
+  &:checked {
+    background: var(--bg-inverse-primary);
+
+    &::after {
+      transform: translateX(20px);
+      background: var(--content-inverse-primary);
+    }
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+}
+
+.confirm {
+  max-width: 360px;
+  padding: space(600);
+  border: 0;
+  border-radius: radius(large);
+  background: var(--bg-secondary);
+  color: var(--content-primary);
+  @include elevation(300);
+
+  &::backdrop {
+    background: var(--scrim);
+  }
+
+  > p {
+    margin: space(300) 0 space(600);
+  }
+}
+
+.confirmActions {
+  display: grid;
+  gap: space(200);
+
+  > button {
+    width: 100%;
+  }
+}

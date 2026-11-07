@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import { Fraunces, JetBrains_Mono as JetBrainsMono } from 'next/font/google';
+import ReminderRuntime from '@/features/reminders/ReminderRuntime';
 import './globals.css';
 
 // next/font self-hosts these at build time: no request to Google from the user's device.
@@ -25,7 +26,10 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: LayoutProps<'/'>) {
   return (
     <html lang="en-IN" className={`${display.variable} ${mono.variable}`}>
-      <body>{children}</body>
+      <body>
+        {children}
+        <ReminderRuntime />
+      </body>
     </html>
   );
 }

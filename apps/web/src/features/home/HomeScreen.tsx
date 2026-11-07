@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { formatRupees } from '@creditq/core';
+import { formatClock, formatRupees } from '@creditq/core';
 import CardTile, { cardTileStyles as tileStyles } from '@/components/CardTile';
 import { useTodayInIndia, useVaultAction, useVaultData } from '@/lib/vault-client';
 import { currentBills } from './current-bills';
@@ -45,9 +45,15 @@ export default function HomeScreen() {
   const view = useMemo(
     () =>
       today && current
-        ? buildHomeView({ today, cards: current.cards, paidCardIds: current.paidCardIds })
+        ? buildHomeView({
+            today,
+            cards: current.cards,
+            paidCardIds: current.paidCardIds,
+            leadDays: data?.settings.leadDays ?? 5,
+            reminderTime: formatClock(data?.settings.reminderTime ?? '09:00'),
+          })
         : null,
-    [today, current],
+    [today, current, data],
   );
 
   if (error) {
@@ -96,6 +102,9 @@ export default function HomeScreen() {
         </div>
         <Link href="/add" className={styles.iconButton} aria-label="Add a card">
           +
+        </Link>
+        <Link href="/settings" className={styles.iconButton} aria-label="Settings">
+          ⚙
         </Link>
       </header>
 

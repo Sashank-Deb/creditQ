@@ -23,3 +23,13 @@ describe('content formatting (Base content rules, en-IN)', () => {
     expect(formatRupees(0)).toBe('₹0');
   });
 });
+
+describe('formatClock', () => {
+  it('writes India times the Base way: "9:00 am"', async () => {
+    const { formatClock } = await import('../src');
+    expect(formatClock('09:00')).toBe('9:00 am');
+    expect(formatClock('19:30')).toBe('7:30 pm');
+    expect(formatClock('00:05')).toBe('12:05 am');
+    expect(formatClock('12:00')).toBe('12:00 pm');
+  });
+});
