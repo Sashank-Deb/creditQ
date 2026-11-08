@@ -92,3 +92,34 @@ describe('banks are their own field (separate from the card name)', () => {
     });
   });
 });
+
+describe('validateStatementSoon (asked first, before the due date)', () => {
+  it('accepts a latest-bill date up to today and within the last 2 months', async () => {
+    const { validateStatementPast } = await import('../src');
+    expect(validateStatementPast('2026-11-02', '2026-11-08')).toEqual({
+      ok: true,
+      value: '2026-11-02',
+    });
+    expect(validateStatementPast('2026-11-08', '2026-11-08').ok).toBe(true);
+    expect(validateStatementPast('2026-09-07', '2026-11-08').ok).toBe(true);
+  });
+
+  it('rejects empty, invalid, future and too-old dates', async () => {
+    const { validateStatementPast } = await import('../src');
+    expect(validateStatementPast('', '2026-11-08')).toEqual({
+      ok: false,
+      errors: { statementDate: 'Pick the statement date from your latest bill' },
+    });
+    expect(validateStatementPast('2026-02-30', '2026-11-08').ok).toBe(false);
+    expect(validateStatementPast('2026-11-09', '2026-11-08')).toEqual({
+      ok: false,
+      errors: {
+        statementDate: 'That bill is not generated yet. Use the date on your latest bill.',
+      },
+    });
+    expect(validateStatementPast('2026-09-01', '2026-11-08')).toEqual({
+      ok: false,
+      errors: { statementDate: 'That is over 2 months ago. Use the date on your latest bill.' },
+    });
+  });
+});

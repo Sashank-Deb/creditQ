@@ -177,16 +177,16 @@ function Editor({
           'Only the last 4. We never ask for your full card number.',
         )}
         {field(
-          'dueDate',
-          bill?.status === 'paid' ? 'Next due date' : 'Due date',
-          { type: 'date', min: today },
-          'Repeats every month on this day.',
-        )}
-        {field(
           'statementDate',
           'Statement date',
           { type: 'date', max: form.dueDate || undefined },
           'When the bill is generated. The card comes back as due from this date each month.',
+        )}
+        {field(
+          'dueDate',
+          bill?.status === 'paid' ? 'Next due date' : 'Due date',
+          { type: 'date', min: today },
+          'Repeats every month on this day.',
         )}
         <div className={styles.field}>
           <p className={styles.label}>Card look</p>

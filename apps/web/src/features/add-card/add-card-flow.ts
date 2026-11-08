@@ -1,6 +1,6 @@
 /**
- * Add-card flow state: step 1 "Which card is it?", step 2 "When is it due?",
- * step 3 "When was this bill generated?" (the statement date that starts each monthly cycle).
+ * Add-card flow state: step 1 "Which card is it?", step 2 "When was this bill generated?"
+ * (the statement date that starts each monthly cycle), step 3 "When is it due?".
  * One question per step, inline errors, no amounts anywhere. Pure, so it is unit-tested.
  */
 import {
@@ -11,6 +11,7 @@ import {
   validateCardDetails,
   validateDueDate,
   validateStatementDate,
+  validateStatementPast,
   type CivilDate,
 } from '@creditq/core';
 import type { TilePattern, TileTone } from '@creditq/vault';
@@ -87,7 +88,7 @@ export const addCardReducer = (state: AddCardState, action: AddCardAction): AddC
       if (state.step === 3) return { ...state, step: 2, errors: {} };
       return state;
     case 'failed':
-      return { ...state, step: 3, errors: { statementDate: action.message } };
+      return { ...state, step: 3, errors: { dueDate: action.message } };
     case 'next': {
       if (state.step === 1) {
         const details = validateCardDetails({ name: state.name, last4: state.last4 });
@@ -104,12 +105,17 @@ export const addCardReducer = (state: AddCardState, action: AddCardAction): AddC
         };
       }
       if (state.step === 2) {
-        const r = validateDueDate(state.dueDate, state.today);
+        const r = validateStatementPast(state.statementDate, state.today);
         return r.ok ? { ...state, step: 3, errors: {} } : { ...state, errors: r.errors };
       }
       if (state.step === 3) {
-        const r = validateStatementDate(state.statementDate, state.dueDate);
-        return r.ok ? { ...state, step: 'saving', errors: {} } : { ...state, errors: r.errors };
+        const due = validateDueDate(state.dueDate, state.today);
+        if (!due.ok) return { ...state, errors: due.errors };
+        // The gap between the two dates is checked here, so it is shown under the due date.
+        const gap = validateStatementDate(state.statementDate, due.value);
+        return gap.ok
+          ? { ...state, step: 'saving', errors: {} }
+          : { ...state, errors: { dueDate: gap.errors.statementDate } };
       }
       return state;
     }

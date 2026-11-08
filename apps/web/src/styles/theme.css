@@ -198,3 +198,19 @@ html:root {
     --chart-bar: #d47149;
   }
 }
+
+/* Calendar and timeline marks: today is blue, a due date is red, the pay day is the brand ink. */
+html:root {
+  --cal-today: #2f5bea;
+  --cal-today-ink: #ffffff;
+  --cal-due: #c62f2f;
+  --cal-due-ink: #ffffff;
+}
+@media (prefers-color-scheme: dark) {
+  html:root {
+    --cal-today: #8da4ff;
+    --cal-today-ink: #101528;
+    --cal-due: #ff8a7a;
+    --cal-due-ink: #3b0f0a;
+  }
+}

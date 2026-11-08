@@ -87,6 +87,9 @@
 
 .dueFocus {
   @include type(display-xs);
+  // Smaller than the display size so the date sits comfortably beside the card name.
+  font-size: 30px;
+  line-height: 36px;
 }
 
 .actions {
@@ -106,13 +109,6 @@
     overflow: hidden;
     text-overflow: ellipsis;
   }
-}
-
-.btnOutline {
-  @include button-base;
-  background: transparent;
-  color: inherit;
-  box-shadow: inset 0 0 0 2px currentColor;
 }
 
 .btnOnTile {

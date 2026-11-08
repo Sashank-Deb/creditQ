@@ -45,28 +45,39 @@ $cell: 20px;
 }
 
 .today {
-  text-decoration: underline;
-  text-decoration-thickness: 2px;
-  text-underline-offset: 2px;
+  background: var(--cal-today);
+  color: var(--cal-today-ink);
+  font-weight: 700;
+}
+
+// Pay day uses the brand ink; a due date is red. These win over plain "today".
+.pay {
+  background: var(--bg-inverse-primary);
+  color: var(--content-inverse-primary);
   font-weight: 700;
 }
 
 .due {
-  box-shadow: inset 0 0 0 1.5px var(--border-selected);
+  background: var(--cal-due);
+  color: var(--cal-due-ink);
   font-weight: 700;
 }
 
-.pay {
-  background: var(--accent);
-  color: var(--content-on-accent);
-  font-weight: 700;
+// Today that is also a pay day or due date keeps that fill and gets a blue ring.
+.today.pay,
+.today.due {
+  box-shadow:
+    0 0 0 1.5px var(--bg-secondary),
+    0 0 0 3px var(--cal-today);
 }
 
 .legend {
   @include type(label-xs);
   font-size: 11px;
   display: flex;
-  gap: space(300);
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: space(100) space(300);
   color: var(--content-secondary);
 
   span {
@@ -82,10 +93,14 @@ $cell: 20px;
   }
 }
 
+.todayDot {
+  background: var(--cal-today);
+}
+
 .payDot {
-  background: var(--accent);
+  background: var(--bg-inverse-primary);
 }
 
 .dueDot {
-  box-shadow: inset 0 0 0 1.5px var(--border-selected);
+  background: var(--cal-due);
 }

@@ -9,6 +9,7 @@ import SpendsView from '@/features/spends/SpendsView';
 import { currentBills } from './current-bills';
 import MiniCalendar from './MiniCalendar';
 import PaidDeck from './PaidDeck';
+import ReminderTimeline from './ReminderTimeline';
 import { buildHomeView } from './home-view';
 import styles from './HomeScreen.module.scss';
 
@@ -142,10 +143,14 @@ export default function HomeScreen() {
       {tab === 'due' && !view.isEmpty && (
         <>
           <div className={styles.overview}>
-            <p className={styles.banner} role="status">
+            <MiniCalendar calendar={view.calendar} />
+            <ReminderTimeline
+              items={view.timeline}
+              time={formatClock(data?.settings.reminderTime ?? '09:00')}
+            />
+            <p className={styles.srOnly} role="status">
               {view.banner}
             </p>
-            <MiniCalendar calendar={view.calendar} />
           </div>
           <ol className={styles.stack}>
             {view.tiles.map((t) => (
@@ -161,18 +166,13 @@ export default function HomeScreen() {
                   editHref={`/card?id=${encodeURIComponent(t.cardId)}`}
                   actions={
                     t.isFocus ? (
-                      <>
-                        <button type="button" className={tileStyles.btnOutline}>
-                          Open Google Pay
-                        </button>
-                        <button
-                          type="button"
-                          className={tileStyles.btnOnTile}
-                          onClick={() => setSheetFor(t.cardId)}
-                        >
-                          Mark as paid
-                        </button>
-                      </>
+                      <button
+                        type="button"
+                        className={tileStyles.btnOnTile}
+                        onClick={() => setSheetFor(t.cardId)}
+                      >
+                        Mark as paid
+                      </button>
                     ) : null
                   }
                 />

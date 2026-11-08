@@ -8,6 +8,7 @@ import {
   formatCountdown,
   formatShortDate,
   planPayDays,
+  planReminders,
   type BillInput,
   type BusinessCalendar,
   type CivilDate,
@@ -62,8 +63,16 @@ export interface CalendarView {
   dueDates: CivilDate[];
 }
 
+export interface TimelineItem {
+  kind: 'today' | 'pay-day' | 'follow-up' | 'due';
+  date: CivilDate;
+  label: string;
+  detail: string;
+}
+
 export interface HomeView {
   isEmpty: boolean;
+  timeline: TimelineItem[];
   dueSoonCount: number;
   banner: string;
   tiles: HomeTile[];
@@ -95,6 +104,17 @@ const MONTH_NAMES = [
   'December',
 ];
 
+const TIMELINE_EVENTS = 4;
+
+const plural = (n: number) => `${n} ${n === 1 ? 'bill' : 'bills'}`;
+
+// A day with several reminders shows its most urgent one.
+const PRIORITY = [
+  { item: 'due-today', kind: 'due', label: 'Due' },
+  { item: 'pay-day', kind: 'pay-day', label: 'Pay day' },
+  { item: 'follow-up', kind: 'follow-up', label: 'Heads-up' },
+] as const;
+
 const capitalise = (s: string): string => s.charAt(0).toUpperCase() + s.slice(1);
 
 const calendarFor = (
@@ -118,6 +138,7 @@ export const buildHomeView = (input: HomeInput): HomeView => {
   if (cards.length === 0) {
     return {
       isEmpty: true,
+      timeline: [],
       dueSoonCount: 0,
       banner: '',
       tiles: [],
@@ -190,6 +211,30 @@ export const buildHomeView = (input: HomeInput): HomeView => {
         : 'Paid',
     }));
 
+  const events = planReminders({
+    today,
+    calendar,
+    groups: plan.groups,
+    bills: unpaid.map((c) => toBill(c, 'open')),
+  });
+  const timeline: TimelineItem[] = [
+    { kind: 'today', date: today, label: 'Today', detail: formatShortDate(today) },
+  ];
+  for (const event of events.slice(0, TIMELINE_EVENTS)) {
+    const top = PRIORITY.find((p) => event.items.some((i) => i.kind === p.item));
+    if (top) {
+      const count = event.items
+        .filter((i) => i.kind === top.item)
+        .reduce((n, i) => n + i.billIds.length, 0);
+      timeline.push({
+        kind: top.kind,
+        date: event.date,
+        label: top.label,
+        detail: `${formatShortDate(event.date)} · ${plural(count)}`,
+      });
+    }
+  }
+
   const banner = focusGroup
     ? `Reminders on. Pay day: ${formatShortDate(focusGroup.payDay)} at ${reminderTime}.`
     : 'All paid. Nothing to do until your next statement.';
@@ -197,6 +242,7 @@ export const buildHomeView = (input: HomeInput): HomeView => {
   const month = (focusGroup?.payDay ?? today).slice(0, 7);
   return {
     isEmpty: false,
+    timeline,
     dueSoonCount: unpaid.length,
     banner,
     tiles,

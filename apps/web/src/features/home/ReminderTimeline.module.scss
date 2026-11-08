@@ -1,0 +1,113 @@
+@use '../../styles/tokens' as *;
+
+$dot: 12px;
+$gutter: 20px;
+
+.timeline {
+  min-width: 0;
+  display: grid;
+  gap: space(300);
+  align-content: start;
+}
+
+.heading {
+  @include type(label-s);
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: space(100);
+}
+
+.time {
+  @include type(paragraph-s);
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 400;
+  color: var(--content-secondary);
+  white-space: nowrap;
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+// One row per moment: a dot on the left rail, the label, and the date underneath.
+.item {
+  position: relative;
+  display: grid;
+  grid-template-columns: $gutter 1fr;
+  column-gap: space(200);
+  padding-bottom: space(300);
+
+  // The connecting line to the next row.
+  &::before {
+    content: '';
+    position: absolute;
+    left: calc((#{$gutter} - 2px) / 2);
+    top: $dot;
+    bottom: -2px;
+    width: 2px;
+    border-radius: 1px;
+    background: var(--border-opaque);
+  }
+
+  &:last-child {
+    padding-bottom: 0;
+
+    &::before {
+      display: none;
+    }
+  }
+}
+
+.dot {
+  grid-row: 1 / span 2;
+  width: $dot;
+  height: $dot;
+  margin: space(100) 0 0 calc((#{$gutter} - #{$dot}) / 2);
+  border-radius: 50%;
+  background: var(--content-tertiary);
+  position: relative;
+  z-index: 1;
+  box-shadow: 0 0 0 3px var(--bg-primary);
+}
+
+.label {
+  @include type(label-s);
+}
+
+.detail {
+  @include type(paragraph-s);
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--content-secondary);
+}
+
+.today .dot {
+  background: var(--cal-today);
+}
+
+.pay-day .dot {
+  background: var(--bg-inverse-primary);
+}
+
+.follow-up .dot {
+  background: var(--warning);
+}
+
+.due .dot {
+  background: var(--cal-due);
+}
+
+// The next thing to happen is the strongest: the first row after "Today".
+.today + .item .label {
+  font-weight: 700;
+}
+
+.empty {
+  @include type(paragraph-s);
+  margin: 0;
+  color: var(--content-secondary);
+}

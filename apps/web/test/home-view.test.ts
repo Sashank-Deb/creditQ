@@ -104,3 +104,30 @@ describe('statement dates on Home', () => {
     expect(view.banner).toBe('Reminders on. Pay day: Wed, 18 Nov at 9:00 am.');
   });
 });
+
+describe('reminder timeline (the status section)', () => {
+  it('starts at today and lists the next reminders in order, most urgent label per day', () => {
+    const view = buildHomeView({ today: '2026-02-26', cards, paidCardIds: [] });
+    expect(view.timeline.map((t) => [t.kind, t.date, t.label, t.detail])).toEqual([
+      ['today', '2026-02-26', 'Today', 'Thu, 26 Feb'],
+      ['pay-day', '2026-03-03', 'Pay day', 'Tue, 3 Mar · 3 bills'],
+      ['follow-up', '2026-03-06', 'Heads-up', 'Fri, 6 Mar · 2 bills'],
+      ['due', '2026-03-08', 'Due', 'Sun, 8 Mar · 1 bill'],
+      ['due', '2026-03-10', 'Due', 'Tue, 10 Mar · 1 bill'],
+    ]);
+  });
+
+  it('drops paid cards from the timeline and shows only Today when nothing is left', () => {
+    const view = buildHomeView({
+      today: '2026-03-03',
+      cards,
+      paidCardIds: ['hdfc', 'axis', 'sbi'],
+    });
+    expect(view.timeline.map((t) => t.kind)).toEqual(['today']);
+  });
+
+  it('carries no amounts', () => {
+    const view = buildHomeView({ today: '2026-02-26', cards, paidCardIds: [] });
+    expect(JSON.stringify(view.timeline)).not.toMatch(/₹|amount/i);
+  });
+});

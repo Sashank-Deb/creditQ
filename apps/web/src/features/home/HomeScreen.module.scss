@@ -94,20 +94,9 @@
 
 .overview {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: space(300);
-  align-items: stretch;
-}
-
-.banner {
-  @include type(paragraph-s);
-  margin: 0;
-  padding: space(300) space(400);
-  border-radius: radius(default);
-  background: var(--bg-banner);
-  border: 1px solid var(--border-opaque);
-  display: flex;
-  align-items: center;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: space(400);
+  align-items: start;
 }
 
 // ---- card tiles ----

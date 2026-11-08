@@ -186,6 +186,36 @@ export const detectIssuer = (cardName: string): Issuer => {
   return { id: 'other', bank: '', monogram: initials || '•', color: '#3A4A42', ink: '#FFFFFF' };
 };
 
+/** The statement date asked first: the latest bill, so today or earlier, within 2 months. */
+export const validateStatementPast = (
+  input: string,
+  today: CivilDate,
+): Result<CivilDate, 'statementDate'> => {
+  const d = input.trim();
+  if (d === '') {
+    return {
+      ok: false,
+      errors: { statementDate: 'Pick the statement date from your latest bill' },
+    };
+  }
+  if (!isCivilDate(d)) return { ok: false, errors: { statementDate: 'Enter a real date' } };
+  if (diffDays(d, today) > 0) {
+    return {
+      ok: false,
+      errors: {
+        statementDate: 'That bill is not generated yet. Use the date on your latest bill.',
+      },
+    };
+  }
+  if (diffDays(today, d) > 62) {
+    return {
+      ok: false,
+      errors: { statementDate: 'That is over 2 months ago. Use the date on your latest bill.' },
+    };
+  }
+  return { ok: true, value: d };
+};
+
 const MIN_GAP = 7;
 const MAX_GAP = 45;
 

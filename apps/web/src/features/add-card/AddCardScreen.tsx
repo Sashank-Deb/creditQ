@@ -220,38 +220,16 @@ function Flow({ today, onAgain }: { today: string; onAgain: () => void }) {
         ) : null}
         {state.step === 2 && (
           <>
-            <h1 className={styles.title}>When is it due?</h1>
-            <label className={styles.label} htmlFor="card-due">
-              Payment due date (on your latest bill)
-            </label>
-            <input
-              id="card-due"
-              type="date"
-              className={styles.input}
-              value={state.dueDate}
-              min={today}
-              aria-invalid={Boolean(state.errors.dueDate)}
-              aria-describedby="card-due-hint card-due-error"
-              onChange={(e) => dispatch({ type: 'set', field: 'dueDate', value: e.target.value })}
-            />
-            <p id="card-due-hint" className={styles.hint}>
-              Repeats every month. We never ask for the amount; you only log it after you pay.
-            </p>
-            <FieldError id="card-due-error" message={state.errors.dueDate} />
-          </>
-        )}
-        {(state.step === 3 || state.step === 'saving') && (
-          <>
             <h1 className={styles.title}>When was this bill generated?</h1>
             <label className={styles.label} htmlFor="card-statement">
-              Statement date (on the same bill)
+              Statement date (on your latest bill)
             </label>
             <input
               id="card-statement"
               type="date"
               className={styles.input}
               value={state.statementDate}
-              max={state.dueDate}
+              max={today}
               aria-invalid={Boolean(state.errors.statementDate)}
               aria-describedby="card-statement-hint card-statement-error"
               onChange={(e) =>
@@ -263,6 +241,28 @@ function Flow({ today, onAgain }: { today: string; onAgain: () => void }) {
               comes back as due on this date next month.
             </p>
             <FieldError id="card-statement-error" message={state.errors.statementDate} />
+          </>
+        )}
+        {(state.step === 3 || state.step === 'saving') && (
+          <>
+            <h1 className={styles.title}>When is it due?</h1>
+            <label className={styles.label} htmlFor="card-due">
+              Payment due date (on the same bill)
+            </label>
+            <input
+              id="card-due"
+              type="date"
+              className={styles.input}
+              value={state.dueDate}
+              min={state.statementDate || today}
+              aria-invalid={Boolean(state.errors.dueDate)}
+              aria-describedby="card-due-hint card-due-error"
+              onChange={(e) => dispatch({ type: 'set', field: 'dueDate', value: e.target.value })}
+            />
+            <p id="card-due-hint" className={styles.hint}>
+              Repeats every month. We never ask for the amount; you only log it after you pay.
+            </p>
+            <FieldError id="card-due-error" message={state.errors.dueDate} />
           </>
         )}
         <div className={styles.dock}>

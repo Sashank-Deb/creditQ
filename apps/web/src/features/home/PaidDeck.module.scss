@@ -2,6 +2,7 @@
 @use '../../styles/ui' as *;
 
 $strip: 56px; // visible part of each stacked card
+$card-height: 152px;
 
 .section {
   display: grid;
@@ -34,7 +35,11 @@ $strip: 56px; // visible part of each stacked card
   list-style: none;
   margin: 0;
   padding: 0;
-  display: grid;
+  position: relative;
+  // Room for every strip plus the one card that is fully open at the front.
+  height: calc((var(--count) - 1) * #{$strip} + #{$card-height});
+  // Depth for the flip.
+  perspective: 900px;
 }
 
 @include tile-themes;
@@ -42,20 +47,25 @@ $strip: 56px; // visible part of each stacked card
 // Each card is a full-height tile; all but the first slide up under the one above,
 // leaving a $strip-tall edge visible, like a fanned deck.
 .card {
-  position: relative;
-  height: 152px;
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: $card-height;
+  // The deck position (0 = back) decides both the height in the stack and what is on top.
+  z-index: var(--pos);
+  transform: translateY(calc(var(--pos) * #{$strip}));
   border-radius: radius(large);
   border: 1px solid var(--border-tile);
   box-shadow: 0 -2px 8px rgb(0 0 0 / 0.12);
   overflow: hidden;
-  @include motion(transform, move);
-
-  & + & {
-    margin-top: calc(#{$strip} - 152px);
-  }
+  // A soft spring: the cards glide into place with a hair of overshoot, then settle.
+  transition:
+    transform 640ms cubic-bezier(0.34, 1.28, 0.5, 1),
+    box-shadow 640ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.top {
+.front {
   @include elevation(200);
 }
 
@@ -80,6 +90,41 @@ $strip: 56px; // visible part of each stacked card
   display: flex;
   flex-direction: column;
   gap: space(300);
+  // The card turns up from its top edge, as if flipped open.
+  transform-origin: 50% 0;
+  backface-visibility: hidden;
+  animation: flip-open 680ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes flip-open {
+  0% {
+    transform: rotateX(-88deg);
+    opacity: 0;
+  }
+
+  35% {
+    opacity: 1;
+  }
+
+  70% {
+    // A little overshoot, then it settles.
+    transform: rotateX(6deg);
+  }
+
+  100% {
+    transform: rotateX(0);
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card {
+    transition: none;
+  }
+
+  .face {
+    animation: none;
+  }
 }
 
 .row {
@@ -121,12 +166,28 @@ $strip: 56px; // visible part of each stacked card
   background: rgb(255 255 255 / 0.24);
 }
 
+.statusRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: space(300);
+}
+
+.next {
+  @include type(paragraph-s);
+  margin: 0;
+  opacity: 0.88;
+
+  &::first-letter {
+    text-transform: uppercase;
+  }
+}
+
 .edit {
   @include button-base;
   @include type(label-s);
-  align-self: flex-start;
+  flex-shrink: 0;
   height: 36px;
-  margin-top: auto;
   padding: 0 space(400);
   background: transparent;
   color: inherit;

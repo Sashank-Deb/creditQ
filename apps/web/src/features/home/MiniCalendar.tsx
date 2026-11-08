@@ -48,6 +48,9 @@ export default function MiniCalendar({ calendar }: { calendar: CalendarView }) {
       </div>
       <div className={styles.legend} aria-hidden="true">
         <span>
+          <i className={styles.todayDot} /> Today
+        </span>
+        <span>
           <i className={styles.payDot} /> Pay day
         </span>
         <span>
