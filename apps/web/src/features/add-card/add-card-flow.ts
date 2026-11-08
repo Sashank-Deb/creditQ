@@ -11,7 +11,7 @@ import {
   validateCardDetails,
   validateDueDate,
   validateStatementDate,
-  validateStatementPast,
+  validateStatementEntry,
   type CivilDate,
 } from '@creditq/core';
 import type { TilePattern, TileTone } from '@creditq/vault';
@@ -105,7 +105,7 @@ export const addCardReducer = (state: AddCardState, action: AddCardAction): AddC
         };
       }
       if (state.step === 2) {
-        const r = validateStatementPast(state.statementDate, state.today);
+        const r = validateStatementEntry(state.statementDate, state.today);
         return r.ok ? { ...state, step: 3, errors: {} } : { ...state, errors: r.errors };
       }
       if (state.step === 3) {

@@ -2,7 +2,7 @@
  * Billing cycle helpers: issuer monograms (no logos: brand colour + short name, so no
  * trademark artwork ships), statement-date rules, and a calendar month grid.
  */
-import { dayOfWeek, diffDays, isCivilDate, type CivilDate } from './civil-date';
+import { compareDates, dayOfWeek, diffDays, isCivilDate, type CivilDate } from './civil-date';
 import type { Result } from './card-input';
 
 export interface Issuer {
@@ -186,8 +186,20 @@ export const detectIssuer = (cardName: string): Issuer => {
   return { id: 'other', bank: '', monogram: initials || '•', color: '#3A4A42', ink: '#FFFFFF' };
 };
 
-/** The statement date asked first: the latest bill, so today or earlier, within 2 months. */
-export const validateStatementPast = (
+/** The last civil day of the month `d` falls in. */
+export const lastDayOfMonth = (d: CivilDate): CivilDate => {
+  const y = Number(d.slice(0, 4));
+  const m = Number(d.slice(5, 7));
+  const leap = (y % 4 === 0 && y % 100 !== 0) || y % 400 === 0;
+  const lengths = [31, leap ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+  return `${d.slice(0, 8)}${String(lengths[m - 1]).padStart(2, '0')}`;
+};
+
+/**
+ * The statement date asked first. It is the latest bill (up to 2 months back), or, if this
+ * month's bill is not generated yet, the day it will be: any day up to the end of this month.
+ */
+export const validateStatementEntry = (
   input: string,
   today: CivilDate,
 ): Result<CivilDate, 'statementDate'> => {
@@ -199,13 +211,8 @@ export const validateStatementPast = (
     };
   }
   if (!isCivilDate(d)) return { ok: false, errors: { statementDate: 'Enter a real date' } };
-  if (diffDays(d, today) > 0) {
-    return {
-      ok: false,
-      errors: {
-        statementDate: 'That bill is not generated yet. Use the date on your latest bill.',
-      },
-    };
+  if (compareDates(d, lastDayOfMonth(today)) > 0) {
+    return { ok: false, errors: { statementDate: 'Use a date up to the end of this month.' } };
   }
   if (diffDays(today, d) > 62) {
     return {

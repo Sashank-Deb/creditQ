@@ -45,6 +45,8 @@ export interface HomeTile {
   dueLabel: string;
   pill: string;
   isFocus: boolean;
+  /** The bill is not generated yet (its statement date is still ahead): nothing to pay. */
+  billPending: boolean;
 }
 
 export interface DeckCard {
@@ -181,8 +183,10 @@ export const buildHomeView = (input: HomeInput): HomeView => {
 
   const tiles = unpaid.map((c, i): HomeTile => {
     const group = groupOf.get(c.id);
+    const billPending = c.statementDate !== undefined && compareDates(c.statementDate, today) > 0;
     let pill = '';
-    if (group && i === 0) pill = `Pay day ${formatCountdown(today, group.payDay)}`;
+    if (billPending && c.statementDate) pill = `Bill generates ${formatShortDate(c.statementDate)}`;
+    else if (group && i === 0) pill = `Pay day ${formatCountdown(today, group.payDay)}`;
     else if (group && group === focusGroup) pill = 'Same pay day';
     else if (group) pill = `Pay day ${formatShortDate(group.payDay)}`;
     return {
@@ -195,6 +199,7 @@ export const buildHomeView = (input: HomeInput): HomeView => {
       dueLabel: `Due ${formatShortDate(c.dueDate)}`,
       pill: capitalise(pill),
       isFocus: i === 0,
+      billPending,
     };
   });
 

@@ -93,33 +93,47 @@ describe('banks are their own field (separate from the card name)', () => {
   });
 });
 
-describe('validateStatementSoon (asked first, before the due date)', () => {
-  it('accepts a latest-bill date up to today and within the last 2 months', async () => {
-    const { validateStatementPast } = await import('../src');
-    expect(validateStatementPast('2026-11-02', '2026-11-08')).toEqual({
+describe("validateStatementEntry (asked first: the latest bill, or this month's upcoming one)", () => {
+  it('accepts a past date within 2 months, today, and any day later this month', async () => {
+    const { validateStatementEntry } = await import('../src');
+    expect(validateStatementEntry('2026-11-02', '2026-11-08')).toEqual({
       ok: true,
       value: '2026-11-02',
     });
-    expect(validateStatementPast('2026-11-08', '2026-11-08').ok).toBe(true);
-    expect(validateStatementPast('2026-09-07', '2026-11-08').ok).toBe(true);
+    expect(validateStatementEntry('2026-11-08', '2026-11-08').ok).toBe(true);
+    expect(validateStatementEntry('2026-09-07', '2026-11-08').ok).toBe(true);
+    // The bill is not generated yet: it will be later this month.
+    expect(validateStatementEntry('2026-11-25', '2026-11-08')).toEqual({
+      ok: true,
+      value: '2026-11-25',
+    });
+    expect(validateStatementEntry('2026-11-30', '2026-11-08').ok).toBe(true);
   });
 
-  it('rejects empty, invalid, future and too-old dates', async () => {
-    const { validateStatementPast } = await import('../src');
-    expect(validateStatementPast('', '2026-11-08')).toEqual({
+  it('rejects empty, invalid, beyond-this-month and too-old dates', async () => {
+    const { validateStatementEntry } = await import('../src');
+    expect(validateStatementEntry('', '2026-11-08')).toEqual({
       ok: false,
       errors: { statementDate: 'Pick the statement date from your latest bill' },
     });
-    expect(validateStatementPast('2026-02-30', '2026-11-08').ok).toBe(false);
-    expect(validateStatementPast('2026-11-09', '2026-11-08')).toEqual({
+    expect(validateStatementEntry('2026-02-30', '2026-11-08').ok).toBe(false);
+    expect(validateStatementEntry('2026-12-01', '2026-11-08')).toEqual({
       ok: false,
-      errors: {
-        statementDate: 'That bill is not generated yet. Use the date on your latest bill.',
-      },
+      errors: { statementDate: 'Use a date up to the end of this month.' },
     });
-    expect(validateStatementPast('2026-09-01', '2026-11-08')).toEqual({
+    expect(validateStatementEntry('2026-09-01', '2026-11-08')).toEqual({
       ok: false,
       errors: { statementDate: 'That is over 2 months ago. Use the date on your latest bill.' },
     });
+  });
+});
+
+describe('lastDayOfMonth', () => {
+  it('returns the last civil day of the month, including leap years and December', async () => {
+    const { lastDayOfMonth } = await import('../src');
+    expect(lastDayOfMonth('2026-11-08')).toBe('2026-11-30');
+    expect(lastDayOfMonth('2026-12-31')).toBe('2026-12-31');
+    expect(lastDayOfMonth('2028-02-03')).toBe('2028-02-29');
+    expect(lastDayOfMonth('2027-02-03')).toBe('2027-02-28');
   });
 });

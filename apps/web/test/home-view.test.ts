@@ -165,3 +165,26 @@ describe('a missed pay day', () => {
     expect(view.timeline.map((t) => t.kind)).toEqual(['today']);
   });
 });
+
+describe('a bill that is not generated yet', () => {
+  const pending = { ...cards[0], dueDate: '2026-03-30', statementDate: '2026-03-12' };
+
+  it('says when it generates, and holds back "Mark as paid" until then', () => {
+    const view = buildHomeView({ today: '2026-02-26', cards: [pending], paidCardIds: [] });
+    expect(view.tiles[0]).toMatchObject({
+      billPending: true,
+      pill: 'Bill generates Thu, 12 Mar',
+    });
+  });
+
+  it('is an ordinary due card once the statement date has arrived', () => {
+    const view = buildHomeView({ today: '2026-03-12', cards: [pending], paidCardIds: [] });
+    expect(view.tiles[0]).toMatchObject({ billPending: false });
+    expect(view.tiles[0]?.pill).toMatch(/^Pay day/);
+  });
+
+  it('still plans the pay day, never before the bill exists', () => {
+    const view = buildHomeView({ today: '2026-02-26', cards: [pending], paidCardIds: [] });
+    expect(view.timeline.find((t) => t.kind === 'pay-day')?.date).toBe('2026-03-25');
+  });
+});

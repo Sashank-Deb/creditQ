@@ -165,7 +165,7 @@ export default function HomeScreen() {
                   focus={t.isFocus}
                   editHref={`/card?id=${encodeURIComponent(t.cardId)}`}
                   actions={
-                    t.isFocus ? (
+                    t.isFocus && !t.billPending ? (
                       <button
                         type="button"
                         className={tileStyles.btnOnTile}

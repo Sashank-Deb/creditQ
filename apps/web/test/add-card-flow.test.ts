@@ -73,15 +73,13 @@ describe('add-card flow (3 steps, one question each)', () => {
       { type: 'next' },
     );
     expect(s1.step).toBe(2);
-    const future = addCardReducer(
+    const pastThisMonth = addCardReducer(
       addCardReducer(s1, { type: 'set', field: 'statementDate', value: '2026-03-01' }),
       { type: 'next' },
     );
-    expect(future).toMatchObject({
+    expect(pastThisMonth).toMatchObject({
       step: 2,
-      errors: {
-        statementDate: 'That bill is not generated yet. Use the date on your latest bill.',
-      },
+      errors: { statementDate: 'Use a date up to the end of this month.' },
     });
     const s2 = addCardReducer(
       addCardReducer(s1, { type: 'set', field: 'statementDate', value: '2026-02-18' }),
@@ -102,6 +100,26 @@ describe('add-card flow (3 steps, one question each)', () => {
       { type: 'next' },
     );
     expect(ok).toMatchObject({ step: 'saving', errors: {} });
+  });
+
+  it('lets a card whose bill is not generated yet be added for this month', () => {
+    const s = run(
+      { type: 'pickBank', bank: 'HSBC' },
+      { type: 'set', field: 'name', value: 'Premier' },
+      { type: 'set', field: 'last4', value: '4821' },
+      { type: 'next' },
+      // Today is 26 Feb; the bill will be generated on 28 Feb.
+      { type: 'set', field: 'statementDate', value: '2026-02-28' },
+      { type: 'next' },
+    );
+    expect(s).toMatchObject({ step: 3, errors: {} });
+    const saved = addCardReducer(
+      addCardReducer(s, { type: 'set', field: 'dueDate', value: '2026-03-18' }),
+      {
+        type: 'next',
+      },
+    );
+    expect(saved).toMatchObject({ step: 'saving', errors: {} });
   });
 
   it('rejects a due date too close to the statement date, under the due date field', () => {

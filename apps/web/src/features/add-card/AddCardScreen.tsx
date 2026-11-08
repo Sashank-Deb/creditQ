@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useReducer, useState } from 'react';
-import { detectIssuer, formatShortDate, listBanks } from '@creditq/core';
+import { detectIssuer, formatShortDate, lastDayOfMonth, listBanks } from '@creditq/core';
 import { TILE_TONES, type TileTone } from '@creditq/vault';
 import BackButton from '@/components/BackButton';
 import CardTile from '@/components/CardTile';
@@ -220,16 +220,16 @@ function Flow({ today, onAgain }: { today: string; onAgain: () => void }) {
         ) : null}
         {state.step === 2 && (
           <>
-            <h1 className={styles.title}>When was this bill generated?</h1>
+            <h1 className={styles.title}>When is this bill generated?</h1>
             <label className={styles.label} htmlFor="card-statement">
-              Statement date (on your latest bill)
+              Statement date
             </label>
             <input
               id="card-statement"
               type="date"
               className={styles.input}
               value={state.statementDate}
-              max={today}
+              max={lastDayOfMonth(today)}
               aria-invalid={Boolean(state.errors.statementDate)}
               aria-describedby="card-statement-hint card-statement-error"
               onChange={(e) =>
@@ -237,8 +237,9 @@ function Flow({ today, onAgain }: { today: string; onAgain: () => void }) {
               }
             />
             <p id="card-statement-hint" className={styles.hint}>
-              Your monthly cycle starts here. After you pay, the card waits in the paid deck and
-              comes back as due on this date next month.
+              Your monthly cycle starts here. Bill not generated yet? Pick the date it will be
+              generated this month. After you pay, the card waits in the paid deck and comes back as
+              due on this date next month.
             </p>
             <FieldError id="card-statement-error" message={state.errors.statementDate} />
           </>
