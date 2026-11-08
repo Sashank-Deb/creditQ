@@ -1,4 +1,4 @@
-// One deployment, two apps: the marketing site is served at /, the app at /app.
+// One deployment, two apps: the app is served at /, the marketing site under /site.
 // Builds each Next static export, then merges them into apps/web/dist.
 import { cpSync, existsSync, mkdirSync, rmSync } from 'node:fs';
 import { dirname, join } from 'node:path';
@@ -14,7 +14,7 @@ for (const dir of [site, web]) {
 }
 rmSync(dist, { recursive: true, force: true });
 mkdirSync(dist, { recursive: true });
-cpSync(site, dist, { recursive: true });
-// The app was built with basePath /app, so its files drop in under /app.
-cpSync(web, join(dist, 'app'), { recursive: true });
+cpSync(web, dist, { recursive: true });
+// The site was built with basePath /site, so its files drop in under /site.
+cpSync(site, join(dist, 'site'), { recursive: true });
 console.log(`Merged site and app into ${dist}`);

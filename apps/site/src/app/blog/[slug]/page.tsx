@@ -4,7 +4,7 @@ import { notFound } from 'next/navigation';
 import JsonLd from '../../../blog/JsonLd';
 import RichText from '../../../blog/RichText';
 import { POSTS, getPost } from '../../../blog/posts';
-import { APP_URL, SITE_NAME, SITE_URL } from '../../../site-config';
+import { APP_URL, SITE_NAME, SITE_PATH, SITE_URL } from '../../../site-config';
 import styles from '../../site.module.scss';
 
 export const dynamicParams = false;
@@ -18,21 +18,21 @@ export async function generateMetadata({ params }: PageProps<'/blog/[slug]'>): P
     title: post.seoTitle,
     description: post.description,
     keywords: post.keywords,
-    alternates: { canonical: `/blog/${post.slug}` },
+    alternates: { canonical: `${SITE_PATH}/blog/${post.slug}` },
     openGraph: {
       type: 'article',
-      url: `/blog/${post.slug}`,
+      url: `${SITE_PATH}/blog/${post.slug}`,
       title: post.title,
       description: post.description,
       publishedTime: post.published,
       modifiedTime: post.updated,
-      images: [{ url: post.image, width: 1200, height: 630, alt: post.title }],
+      images: [{ url: `${SITE_PATH}${post.image}`, width: 1200, height: 630, alt: post.title }],
     },
     twitter: {
       card: 'summary_large_image',
       title: post.title,
       description: post.description,
-      images: [post.image],
+      images: [`${SITE_PATH}${post.image}`],
     },
   };
 }

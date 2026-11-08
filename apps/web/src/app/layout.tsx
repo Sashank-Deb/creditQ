@@ -12,20 +12,19 @@ const display = Fraunces({
 });
 const mono = JetBrainsMono({ variable: '--font-mono', subsets: ['latin'], weight: ['500'] });
 
-// Origin only; files live under /app.
-const ORIGIN = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://credit-q.vercel.app';
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://credit-q.vercel.app';
 
 export const metadata: Metadata = {
-  metadataBase: new URL(ORIGIN),
+  metadataBase: new URL(APP_URL),
   title: { default: 'CreditQ', template: '%s' },
   description: 'Credit card bill reminders. Your data stays on this device.',
   applicationName: 'CreditQ',
   icons: {
     icon: [
-      { url: '/app/icon.svg', type: 'image/svg+xml' },
-      { url: '/app/favicon.ico', sizes: '48x48' },
+      { url: '/icon.svg', type: 'image/svg+xml' },
+      { url: '/favicon.ico', sizes: '48x48' },
     ],
-    apple: '/app/apple-touch-icon.png',
+    apple: '/apple-touch-icon.png',
   },
   openGraph: {
     type: 'website',
@@ -33,9 +32,9 @@ export const metadata: Metadata = {
     title: 'CreditQ: credit card bill reminders',
     description:
       'Pay day reminders for your credit cards. Works offline. Your data stays on your device.',
-    images: [{ url: '/app/og.png', width: 1200, height: 630, alt: 'CreditQ' }],
+    images: [{ url: '/og.png', width: 1200, height: 630, alt: 'CreditQ' }],
   },
-  twitter: { card: 'summary_large_image', images: ['/app/og.png'] },
+  twitter: { card: 'summary_large_image', images: ['/og.png'] },
 };
 
 export const viewport: Viewport = {

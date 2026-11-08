@@ -49,9 +49,9 @@ const tick = async () => {
       self.registration.showNotification(r.title, {
         body: r.body,
         tag: r.tag,
-        icon: '/app/icon.svg',
-        badge: '/app/icon.svg',
-        data: { url: '/app' },
+        icon: '/icon.svg',
+        badge: '/icon.svg',
+        data: { url: '/' },
       }),
     ),
   );
@@ -78,7 +78,7 @@ const warm = async (urls) => {
         if (!res.ok || res.redirected) return;
         const html = await res.clone().text();
         await cache.put(url, res);
-        const assets = new Set(html.match(/\/(?:app\/)?_next\/static\/[^"'\\\s)]+/g) || []);
+        const assets = new Set(html.match(/\/_next\/static\/[^"'\\\s)]+/g) || []);
         await Promise.all(
           [...assets].map(async (asset) => {
             if (await cache.match(asset)) return;
@@ -109,7 +109,12 @@ self.addEventListener('fetch', (event) => {
   const req = event.request;
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
-  if (url.origin !== self.location.origin || url.pathname === '/app/sw.js') return;
+  if (
+    url.origin !== self.location.origin ||
+    url.pathname === '/sw.js' ||
+    url.pathname.startsWith('/site')
+  )
+    return;
   event.respondWith(
     (async () => {
       const cache = await caches.open(SHELL);
@@ -134,7 +139,7 @@ self.addEventListener('message', (event) => {
 });
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
-  const url = (event.notification.data && event.notification.data.url) || '/app';
+  const url = (event.notification.data && event.notification.data.url) || '/';
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((wins) => {
       const open = wins.find((w) => new URL(w.url).origin === self.location.origin);

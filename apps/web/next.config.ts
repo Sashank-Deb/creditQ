@@ -3,8 +3,6 @@ import type { NextConfig } from 'next';
 const nextConfig: NextConfig = {
   // Fully static PWA: no server runtime, so no user data can ever reach a server of ours.
   output: 'export',
-  // The marketing site is served at /, so the app lives under /app (one Vercel project).
-  basePath: '/app',
   reactCompiler: true,
   // @creditq/core ships TypeScript source.
   transpilePackages: ['@creditq/core'],

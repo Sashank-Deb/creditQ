@@ -2,15 +2,19 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import JsonLd from '../../blog/JsonLd';
 import { POSTS } from '../../blog/posts';
-import { SITE_NAME, SITE_URL } from '../../site-config';
+import { SITE_NAME, SITE_PATH, SITE_URL } from '../../site-config';
 import styles from '../site.module.scss';
 
 export const metadata: Metadata = {
   title: 'Credit card guides for India',
   description:
     'Plain-language guides on credit card due dates, billing cycles and paying several cards on time, from the makers of CreditQ.',
-  alternates: { canonical: '/blog' },
-  openGraph: { url: '/blog', title: 'CreditQ blog: credit card guides', images: ['/og.png'] },
+  alternates: { canonical: `${SITE_PATH}/blog` },
+  openGraph: {
+    url: `${SITE_PATH}/blog`,
+    title: 'CreditQ blog: credit card guides',
+    images: [`${SITE_PATH}/og.png`],
+  },
 };
 
 export default function BlogIndex() {
