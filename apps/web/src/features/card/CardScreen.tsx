@@ -170,7 +170,12 @@ function Editor({
             {errors.bank}
           </p>
         </div>
-        {field('name', 'Card name', { autoComplete: 'off' }, 'The name of the card, not the bank.')}
+        {field(
+          'name',
+          'Card name',
+          { autoComplete: 'off', autoCorrect: 'off', spellCheck: false, 'data-1p-ignore': true },
+          'The name of the card, not the bank.',
+        )}
         {field(
           'last4',
           'Last 4 digits',

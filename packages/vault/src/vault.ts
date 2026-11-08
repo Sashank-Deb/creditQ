@@ -15,6 +15,7 @@ import {
   validateStatementDate,
   type CivilDate,
 } from '@creditq/core';
+import { isSnapshot, type Snapshot } from './backup';
 import { createAesGcmCodec, generateDeviceKey, type Sealed } from './codec';
 
 export const TILE_TONES = [
@@ -381,6 +382,39 @@ export const openVault = async (options: VaultOptions = {}) => {
     return next;
   };
 
+  /** Everything in the vault, decrypted, for an encrypted backup file. */
+  const exportSnapshot = async (): Promise<Snapshot> => ({
+    cards: await listCards(),
+    bills: await listBills(),
+    payments: await listPayments(),
+    settings: await getSettings(),
+  });
+
+  /** Replaces the vault contents with a snapshot. Nothing changes if the snapshot is invalid. */
+  const importSnapshot = async (snapshot: Snapshot): Promise<void> => {
+    if (!isSnapshot(snapshot)) throw new Error('This is not a CreditQ backup file.');
+    const cardRows = await Promise.all(snapshot.cards.map((c) => cardRowFor(c)));
+    const billRows = await Promise.all(snapshot.bills.map((b) => billRow(b)));
+    const paymentRows: PaymentRow[] = await Promise.all(
+      snapshot.payments.map(async (p) => ({
+        id: p.id,
+        v: PAYLOAD_V,
+        billId: p.billId,
+        cardId: p.cardId,
+        paidOn: p.paidOn,
+        ...(await seal('payments', p.id, p)),
+      })),
+    );
+    const settings = { ...DEFAULT_SETTINGS, ...snapshot.settings };
+    await db.transaction('rw', db.cards, db.bills, db.payments, db.meta, async () => {
+      await Promise.all([db.cards.clear(), db.bills.clear(), db.payments.clear()]);
+      await db.cards.bulkPut(cardRows);
+      await db.bills.bulkPut(billRows);
+      await db.payments.bulkPut(paymentRows);
+      await db.meta.put({ key: 'settings', value: settings });
+    });
+  };
+
   return {
     /** Dexie instance, for live queries in the UI. */
     db,
@@ -394,6 +428,8 @@ export const openVault = async (options: VaultOptions = {}) => {
     removeCard,
     getSettings,
     saveSettings,
+    exportSnapshot,
+    importSnapshot,
     /** Deletes the whole database, including the device key. */
     deleteEverything: async () => {
       db.close();

@@ -181,16 +181,97 @@
     background: var(--scrim);
   }
 
-  > p {
-    margin: space(300) 0 space(600);
+  > p,
+  form > p {
+    margin: space(300) 0 0;
   }
 }
 
 .confirmActions {
   display: grid;
   gap: space(200);
+  margin-top: space(400);
 
   > button {
     width: 100%;
   }
+}
+
+.btnPrimary {
+  @include button-primary-large;
+}
+
+.segmented {
+  display: flex;
+  flex-shrink: 0;
+  padding: 2px;
+  border-radius: radius(pill);
+  background: var(--bg-tertiary);
+}
+
+.segment {
+  position: relative;
+
+  input {
+    @include sr-only;
+  }
+
+  span {
+    @include type(label-s);
+    display: block;
+    padding: space(200) space(300);
+    border-radius: radius(pill);
+    color: var(--content-secondary);
+    cursor: pointer;
+  }
+
+  input:checked + span {
+    background: var(--bg-inverse-primary);
+    color: var(--content-inverse-primary);
+  }
+
+  input:focus-visible + span {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+}
+
+.note {
+  margin: 0;
+  padding: 0 space(400) space(400);
+}
+
+.fieldLabel {
+  @include type(label-s);
+  display: block;
+  margin: space(300) 0 space(100);
+  color: var(--content-secondary);
+}
+
+.input {
+  @include field;
+}
+
+.error {
+  @include type(label-s);
+  margin: space(200) 0 0;
+  color: var(--negative);
+}
+
+.saveBar {
+  position: sticky;
+  bottom: 0;
+  margin-top: auto;
+  padding: space(300) 0;
+  display: grid;
+  gap: space(100);
+  background: var(--bg-primary);
+}
+
+.saveHint {
+  @include type(label-s);
+  margin: 0;
+  min-height: 1.25em;
+  text-align: center;
+  color: var(--content-secondary);
 }

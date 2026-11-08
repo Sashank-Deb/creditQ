@@ -245,3 +245,16 @@ $motion: (
     pointer-events: none;
   }
 }
+
+// Dark-mode styles that follow the device unless the user picked a theme in Settings.
+@mixin dark {
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme='light']) & {
+      @content;
+    }
+  }
+
+  :root[data-theme='dark'] & {
+    @content;
+  }
+}

@@ -119,6 +119,25 @@
   background: var(--bg-primary);
 }
 
+// The form's bar stays above the iOS keyboard (see useKeyboardInset) and keeps the page
+// content clear of itself.
+.dockFixed {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: var(--kb-inset, 0px);
+  z-index: 10;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  padding: space(300) space(400) calc(space(300) + env(safe-area-inset-bottom, 0px));
+}
+
+.form {
+  padding-bottom: 96px;
+}
+
 .btnPrimary {
   @include button-primary-large;
 }

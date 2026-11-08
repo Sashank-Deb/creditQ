@@ -93,7 +93,7 @@ html:root {
   color-scheme: light;
 }
 @media (prefers-color-scheme: dark) {
-  html:root {
+  html:root:not([data-theme='light']) {
     --bg-primary: #131a16;
     --bg-secondary: #1c2620;
     --bg-tertiary: #0b110e;
@@ -188,15 +188,112 @@ html:root {
     color-scheme: dark;
   }
 }
+html:root[data-theme='dark'] {
+  --bg-primary: #131a16;
+  --bg-secondary: #1c2620;
+  --bg-tertiary: #0b110e;
+  --bg-inverse-primary: #eef2ec;
+  --content-primary: #eef2ec;
+  --content-secondary: #afc0b5;
+  --content-tertiary: #93a69a;
+  --content-inverse-primary: #1c2620;
+  --border-opaque: rgba(238, 242, 236, 0.14);
+  --border-transparent: rgba(238, 242, 236, 0.07);
+  --border-selected: #eef2ec;
+  --accent: #e58f68;
+  --content-on-accent: #131a16;
+  --positive: #8cc9a3;
+  --bg-positive: #1d3326;
+  --warning: #e2b65c;
+  --bg-warning: #3a2f18;
+  --content-on-warning: #e2b65c;
+  --negative: #f08a73;
+  --bg-negative: #41201a;
+  --ring: #e58f68;
+  --content-snack-action: #9a4325;
+  --bg-banner: #1c2620;
+  --content-banner-icon: #e58f68;
+  --stage: #080c0a;
+  --grain: rgba(238, 242, 236, 0.025);
+  --bg-nav-selected: rgba(31, 58, 47, 0.08);
+  --chart-1: #8cc9a3;
+  --chart-2: #e58f68;
+  --chart-3: #d9c7a3;
+  --scrim: rgba(0, 0, 0, 0.64);
+  --shadow-100: 0 1px 2px rgba(0, 0, 0, 0.32);
+  --shadow-200: 0 1px 2px rgba(0, 0, 0, 0.4), 0 4px 12px rgba(0, 0, 0, 0.4);
+  --shadow-300: 0 -4px 8px rgba(0, 0, 0, 0.3), 0 -12px 32px rgba(0, 0, 0, 0.5);
+  --border-tile: rgba(0, 0, 0, 0.14);
+  --tile-1-from: #1f3a2f;
+  --tile-1-to: #2f5444;
+  --tile-1-ink: #ffffff;
+  --tile-1-line: rgba(255, 255, 255, 0.08);
+  --tile-1-btn: #ffffff;
+  --tile-1-btnfg: #1f3a2f;
+  --tile-1-tag: rgba(0, 0, 0, 0.28);
+  --tile-1-tagfg: #ffffff;
+  --tile-2-from: #8e3b20;
+  --tile-2-to: #a94d2b;
+  --tile-2-ink: #ffffff;
+  --tile-2-line: rgba(255, 255, 255, 0.08);
+  --tile-2-btn: #ffffff;
+  --tile-2-btnfg: #1f3a2f;
+  --tile-2-tag: rgba(0, 0, 0, 0.28);
+  --tile-2-tagfg: #ffffff;
+  --tile-3-from: #d6c29c;
+  --tile-3-to: #e8dbbf;
+  --tile-3-ink: #1f3a2f;
+  --tile-3-line: rgba(0, 0, 0, 0.07);
+  --tile-3-btn: #1f3a2f;
+  --tile-3-btnfg: #f4f7f1;
+  --tile-3-tag: #1f3a2f;
+  --tile-3-tagfg: #f4f7f1;
+  --tile-4-from: #434d1e;
+  --tile-4-to: #5c6729;
+  --tile-4-ink: #ffffff;
+  --tile-4-line: rgba(255, 255, 255, 0.08);
+  --tile-4-btn: #ffffff;
+  --tile-4-btnfg: #1f3a2f;
+  --tile-4-tag: rgba(0, 0, 0, 0.28);
+  --tile-4-tagfg: #ffffff;
+  --tile-5-from: #2e4156;
+  --tile-5-to: #465f7c;
+  --tile-5-ink: #ffffff;
+  --tile-5-line: rgba(255, 255, 255, 0.08);
+  --tile-5-btn: #ffffff;
+  --tile-5-btnfg: #1f3a2f;
+  --tile-5-tag: rgba(0, 0, 0, 0.28);
+  --tile-5-tagfg: #ffffff;
+  --tile-6-from: #4a1020;
+  --tile-6-to: #7a2236;
+  --tile-6-ink: #ffffff;
+  --tile-6-line: rgba(255, 255, 255, 0.08);
+  --tile-6-btn: #ffffff;
+  --tile-6-btnfg: #4a1020;
+  --tile-6-tag: rgba(0, 0, 0, 0.28);
+  --tile-6-tagfg: #ffffff;
+  --tile-7-from: #121212;
+  --tile-7-to: #2e2e30;
+  --tile-7-ink: #ffffff;
+  --tile-7-line: rgba(255, 255, 255, 0.08);
+  --tile-7-btn: #ffffff;
+  --tile-7-btnfg: #121212;
+  --tile-7-tag: rgba(255, 255, 255, 0.16);
+  --tile-7-tagfg: #ffffff;
+  color-scheme: dark;
+}
 
 /* Spends bars: validated with the dataviz palette checks (lightness band, chroma floor, contrast). */
 html:root {
   --chart-bar: #b0532d;
 }
 @media (prefers-color-scheme: dark) {
-  html:root {
+  html:root:not([data-theme='light']) {
     --chart-bar: #d47149;
   }
+}
+html:root[data-theme='dark'] {
+  --chart-bar: #d47149;
 }
 
 /* Calendar and timeline marks: today is blue, the pay day is peach. Due dates are not marked. */
@@ -207,10 +304,16 @@ html:root {
   --cal-pay-ink: #2f1409;
 }
 @media (prefers-color-scheme: dark) {
-  html:root {
+  html:root:not([data-theme='light']) {
     --cal-today: #8da4ff;
     --cal-today-ink: #101528;
     --cal-pay: #e58f68;
     --cal-pay-ink: #2f1409;
   }
+}
+html:root[data-theme='dark'] {
+  --cal-today: #8da4ff;
+  --cal-today-ink: #101528;
+  --cal-pay: #e58f68;
+  --cal-pay-ink: #2f1409;
 }

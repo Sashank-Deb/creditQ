@@ -7,6 +7,7 @@ import { TILE_TONES, type TileTone } from '@creditq/vault';
 import BackButton from '@/components/BackButton';
 import CardTile from '@/components/CardTile';
 import TileStylePicker from '@/components/TileStylePicker';
+import { useKeyboardInset } from '@/lib/keyboard';
 import { useTodayInIndia, useVaultAction, useVaultData } from '@/lib/vault-client';
 import {
   addCardReducer,
@@ -30,6 +31,7 @@ function Flow({ today, onAgain }: { today: string; onAgain: () => void }) {
   const [savedName, setSavedName] = useState<string | null>(null);
   const { data } = useVaultData();
   const act = useVaultAction();
+  useKeyboardInset();
 
   const banks = listBanks();
   const nextTone: TileTone = TILE_TONES[(data?.cards.length ?? 0) % TILE_TONES.length] ?? 'forest';
@@ -169,23 +171,31 @@ function Flow({ today, onAgain }: { today: string; onAgain: () => void }) {
               />
             )}
             <FieldError id="card-bank-error" message={state.errors.bank} />
-            <label className={styles.label} htmlFor="card-name">
+            <label className={styles.label} htmlFor="card-nickname">
               Card name
             </label>
             <input
-              id="card-name"
+              id="card-nickname"
+              name="nickname"
               className={styles.input}
               value={state.name}
               placeholder="Premier, Flipkart, Regalia..."
               autoComplete="off"
+              autoCorrect="off"
+              autoCapitalize="words"
+              spellCheck={false}
+              enterKeyHint="next"
+              data-1p-ignore
+              data-lpignore="true"
+              data-form-type="other"
               aria-invalid={Boolean(state.errors.name)}
-              aria-describedby="card-name-hint card-name-error"
+              aria-describedby="card-nickname-hint card-nickname-error"
               onChange={(e) => dispatch({ type: 'set', field: 'name', value: e.target.value })}
             />
-            <p id="card-name-hint" className={styles.hint}>
+            <p id="card-nickname-hint" className={styles.hint}>
               The name of the card itself, not the bank.
             </p>
-            <FieldError id="card-name-error" message={state.errors.name} />
+            <FieldError id="card-nickname-error" message={state.errors.name} />
             <label className={styles.label} htmlFor="card-last4">
               Last 4 digits
             </label>
@@ -270,7 +280,7 @@ function Flow({ today, onAgain }: { today: string; onAgain: () => void }) {
             <FieldError id="card-due-error" message={state.errors.dueDate} />
           </>
         )}
-        <div className={styles.dock}>
+        <div className={`${styles.dock} ${styles.dockFixed}`}>
           <button type="submit" className={styles.btnPrimary} disabled={state.step === 'saving'}>
             {state.step === 1 || state.step === 2 ? 'Next' : 'Save card'}
           </button>
