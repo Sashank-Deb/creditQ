@@ -1,11 +1,13 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import BackButton from '@/components/BackButton';
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { istInstant, toIcs } from '@creditq/core';
 import { openBackup, sealBackup, type ContentLevel } from '@creditq/vault';
 import { buildReminderPlan } from '@/features/reminders/reminder-plan';
 import { notificationsSupported } from '@/features/reminders/ReminderRuntime';
+import { passphraseStrength } from '@/lib/passphrase';
 import { applyTheme, readTheme, saveTheme, THEMES, type Theme } from '@/lib/theme';
 import { getVault, useTodayInIndia, useVaultAction, useVaultData } from '@/lib/vault-client';
 import styles from './SettingsScreen.module.scss';
@@ -55,6 +57,13 @@ export default function SettingsScreen() {
   const [backupError, setBackupError] = useState<string | null>(null);
   const [backupNote, setBackupNote] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const router = useRouter();
+  const [pass, setPass] = useState('');
+  const [confirm, setConfirm] = useState('');
+  const [reveal, setReveal] = useState(false);
+  const [importFile, setImportFile] = useState<File | null>(null);
+  const [importPass, setImportPass] = useState('');
+  const [restored, setRestored] = useState(false);
 
   // Preview a theme choice while it is unsaved; leaving the screen puts the saved one back.
   useEffect(() => {
@@ -84,10 +93,14 @@ export default function SettingsScreen() {
     setSaved(true);
   };
 
-  const exportBackup = async (form: HTMLFormElement) => {
-    const data2 = new FormData(form);
-    const pass = String(data2.get('passphrase') ?? '');
-    if (pass !== String(data2.get('confirm') ?? '')) {
+  const strength = passphraseStrength(pass);
+
+  const exportBackup = async () => {
+    if (strength.level === 0) {
+      setBackupError('Use a passphrase of at least 8 characters.');
+      return;
+    }
+    if (pass !== confirm) {
       setBackupError('The two passphrases do not match.');
       return;
     }
@@ -102,7 +115,9 @@ export default function SettingsScreen() {
       a.download = `creditq-backup-${today}.json`;
       a.click();
       URL.revokeObjectURL(url);
-      form.reset();
+      setPass('');
+      setConfirm('');
+      setReveal(false);
       exportRef.current?.close();
       setBackupNote(
         'Backup saved. Keep the passphrase safe: without it the file cannot be opened.',
@@ -114,21 +129,20 @@ export default function SettingsScreen() {
     }
   };
 
-  const importBackup = async (form: HTMLFormElement) => {
-    const data2 = new FormData(form);
-    const file = data2.get('file');
-    if (!(file instanceof File) || file.size === 0) {
+  const importBackup = async () => {
+    if (!importFile) {
       setBackupError('Choose a backup file first.');
       return;
     }
     setBusy(true);
     setBackupError(null);
     try {
-      const snapshot = await openBackup(await file.text(), String(data2.get('passphrase') ?? ''));
+      const snapshot = await openBackup(await importFile.text(), importPass);
       await act((v) => v.importSnapshot(snapshot));
-      form.reset();
-      importRef.current?.close();
-      setBackupNote('Backup restored. Your cards, bills and payments are back.');
+      setImportFile(null);
+      setImportPass('');
+      setRestored(true);
+      setTimeout(() => router.push('/'), 1800);
     } catch (e) {
       setBackupError((e as Error).message);
     } finally {
@@ -383,40 +397,68 @@ export default function SettingsScreen() {
         <form
           onSubmit={(e) => {
             e.preventDefault();
-            exportBackup(e.currentTarget);
+            exportBackup();
           }}
         >
           <h2 id="export-title" className={styles.groupTitle}>
             Export data
           </h2>
           <p className={styles.rowHint}>
-            Choose a passphrase of at least 8 characters. There is no way to recover it, so keep it
-            somewhere safe.
+            Your cards, bills and payments go into one file, locked with a passphrase. There is no
+            way to recover the passphrase, so keep it somewhere safe.
           </p>
           <label className={styles.fieldLabel} htmlFor="export-pass">
             Passphrase
           </label>
-          <input
-            id="export-pass"
-            name="passphrase"
-            type="password"
-            className={styles.input}
-            autoComplete="new-password"
-            minLength={8}
-            required
-          />
+          <div className={styles.passWrap}>
+            <input
+              id="export-pass"
+              type={reveal ? 'text' : 'password'}
+              className={styles.input}
+              autoComplete="new-password"
+              value={pass}
+              onChange={(e) => setPass(e.target.value)}
+              aria-describedby="export-strength"
+              required
+            />
+            <button
+              type="button"
+              className={styles.reveal}
+              aria-pressed={reveal}
+              onClick={() => setReveal((r) => !r)}
+            >
+              {reveal ? 'Hide' : 'Show'}
+            </button>
+          </div>
+          {pass.length > 0 && (
+            <div id="export-strength" className={styles.strength} data-level={strength.level}>
+              <div className={styles.meter} aria-hidden="true">
+                {[1, 2, 3, 4].map((n) => (
+                  <span key={n} className={n <= strength.level ? styles.meterOn : undefined} />
+                ))}
+              </div>
+              <p role="status">
+                <strong>{strength.label}.</strong> {strength.tip}
+              </p>
+            </div>
+          )}
           <label className={styles.fieldLabel} htmlFor="export-confirm">
             Repeat passphrase
           </label>
           <input
             id="export-confirm"
-            name="confirm"
-            type="password"
+            type={reveal ? 'text' : 'password'}
             className={styles.input}
             autoComplete="new-password"
-            minLength={8}
+            value={confirm}
+            onChange={(e) => setConfirm(e.target.value)}
             required
           />
+          {confirm.length > 0 && (
+            <p className={pass === confirm ? styles.match : styles.mismatch} role="status">
+              {pass === confirm ? 'Passphrases match.' : 'Passphrases do not match yet.'}
+            </p>
+          )}
           {backupError && (
             <p className={styles.error} role="alert">
               {backupError}
@@ -437,59 +479,110 @@ export default function SettingsScreen() {
         </form>
       </dialog>
 
-      <dialog ref={importRef} className={styles.confirm} aria-labelledby="import-title">
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            importBackup(e.currentTarget);
-          }}
-        >
-          <h2 id="import-title" className={styles.groupTitle}>
-            Import data
-          </h2>
-          <p className={styles.rowHint}>
-            This replaces every card, bill and payment on this device with the ones in the file.
-          </p>
-          <label className={styles.fieldLabel} htmlFor="import-file">
-            Backup file
-          </label>
-          <input
-            id="import-file"
-            name="file"
-            type="file"
-            accept="application/json,.json"
-            className={styles.input}
-            required
-          />
-          <label className={styles.fieldLabel} htmlFor="import-pass">
-            Passphrase
-          </label>
-          <input
-            id="import-pass"
-            name="passphrase"
-            type="password"
-            className={styles.input}
-            autoComplete="off"
-            required
-          />
-          {backupError && (
-            <p className={styles.error} role="alert">
-              {backupError}
+      <dialog
+        ref={importRef}
+        className={styles.confirm}
+        aria-labelledby="import-title"
+        onCancel={(e) => restored && e.preventDefault()}
+      >
+        {restored ? (
+          <div className={styles.success} role="status">
+            <span className={styles.successIcon} aria-hidden="true">
+              ✓
+            </span>
+            <h2 id="import-title" className={styles.groupTitle}>
+              Backup restored
+            </h2>
+            <p className={styles.rowHint}>
+              Your cards, bills and payments are back. Taking you home…
             </p>
-          )}
-          <div className={styles.confirmActions}>
-            <button type="submit" className={styles.btnDanger} disabled={busy}>
-              {busy ? 'Restoring…' : 'Replace my data'}
-            </button>
-            <button
-              type="button"
-              className={styles.btnText}
-              onClick={() => importRef.current?.close()}
-            >
-              Cancel
+            <button type="button" className={styles.btnPrimary} onClick={() => router.push('/')}>
+              Go to home
             </button>
           </div>
-        </form>
+        ) : (
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              importBackup();
+            }}
+          >
+            <h2 id="import-title" className={styles.groupTitle}>
+              Import data
+            </h2>
+            <p className={styles.rowHint}>
+              This replaces every card, bill and payment on this device with the ones in the file.
+            </p>
+            <span className={styles.fieldLabel} id="import-file-label">
+              Backup file
+            </span>
+            <input
+              id="import-file"
+              type="file"
+              accept="application/json,.json"
+              className={styles.fileInput}
+              aria-labelledby="import-file-label"
+              onChange={(e) => {
+                setImportFile(e.target.files?.[0] ?? null);
+                setBackupError(null);
+              }}
+            />
+            {/* eslint-disable-next-line jsx-a11y/label-has-associated-control -- the text is in nested spans */}
+            <label htmlFor="import-file" className={styles.filePicker}>
+              <span className={styles.fileIcon} aria-hidden="true">
+                <svg
+                  viewBox="0 0 24 24"
+                  width="22"
+                  height="22"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M12 16V4M7 9l5-5 5 5M5 20h14" />
+                </svg>
+              </span>
+              <span className={styles.fileText}>
+                <strong>{importFile ? importFile.name : 'Choose backup file'}</strong>
+                <small>
+                  {importFile
+                    ? `${Math.max(1, Math.round(importFile.size / 1024))} KB · tap to change`
+                    : 'A creditq-backup .json file'}
+                </small>
+              </span>
+            </label>
+            <label className={styles.fieldLabel} htmlFor="import-pass">
+              Passphrase
+            </label>
+            <input
+              id="import-pass"
+              type="password"
+              className={styles.input}
+              autoComplete="off"
+              value={importPass}
+              onChange={(e) => setImportPass(e.target.value)}
+              required
+            />
+            {backupError && (
+              <p className={styles.error} role="alert">
+                {backupError}
+              </p>
+            )}
+            <div className={styles.confirmActions}>
+              <button type="submit" className={styles.btnDanger} disabled={busy}>
+                {busy ? 'Restoring…' : 'Replace my data'}
+              </button>
+              <button
+                type="button"
+                className={styles.btnText}
+                onClick={() => importRef.current?.close()}
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        )}
       </dialog>
 
       <dialog ref={confirmRef} className={styles.confirm} aria-labelledby="confirm-title">
