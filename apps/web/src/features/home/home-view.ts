@@ -79,12 +79,12 @@ export interface CalendarView {
   month: string;
   title: string;
   today: CivilDate;
+  /** Only today and pay days are marked; due dates are not. */
   payDays: CivilDate[];
-  dueDates: CivilDate[];
 }
 
 export interface TimelineItem {
-  kind: 'today' | 'pay-day' | 'missed' | 'due';
+  kind: 'today' | 'pay-day' | 'missed';
   date: CivilDate;
   label: string;
   detail: string;
@@ -128,25 +128,13 @@ const TIMELINE_EVENTS = 4;
 
 const plural = (n: number) => `${n} ${n === 1 ? 'bill' : 'bills'}`;
 
-// A day with a due date shows "Due"; otherwise it is the pay day.
-const PRIORITY = [
-  { item: 'due-today', kind: 'due', label: 'Due' },
-  { item: 'pay-day', kind: 'pay-day', label: 'Pay day' },
-] as const;
-
 const capitalise = (s: string): string => s.charAt(0).toUpperCase() + s.slice(1);
 
-const calendarFor = (
-  month: string,
-  today: CivilDate,
-  payDays: CivilDate[],
-  dueDates: CivilDate[],
-): CalendarView => ({
+const calendarFor = (month: string, today: CivilDate, payDays: CivilDate[]): CalendarView => ({
   month,
   title: `${MONTH_NAMES[Number(month.slice(5, 7)) - 1]} ${month.slice(0, 4)}`,
   today,
   payDays: payDays.filter((d) => d.startsWith(month)),
-  dueDates: dueDates.filter((d) => d.startsWith(month)),
 });
 
 export const buildHomeView = (input: HomeInput): HomeView => {
@@ -162,7 +150,7 @@ export const buildHomeView = (input: HomeInput): HomeView => {
       banner: '',
       tiles: [],
       decks: { recent: [], paid: [], generated: [] },
-      calendar: calendarFor(today.slice(0, 7), today, [], []),
+      calendar: calendarFor(today.slice(0, 7), today, []),
     };
   }
 
@@ -306,19 +294,19 @@ export const buildHomeView = (input: HomeInput): HomeView => {
       detail: `${formatShortDate(missedDay)} · ${plural(missedCount)}`,
     });
   }
-  for (const event of events.slice(0, TIMELINE_EVENTS)) {
-    const top = PRIORITY.find((p) => event.items.some((i) => i.kind === p.item));
-    if (top) {
-      const count = event.items
-        .filter((i) => i.kind === top.item)
-        .reduce((n, i) => n + i.billIds.length, 0);
-      timeline.push({
-        kind: top.kind,
-        date: event.date,
-        label: top.label,
-        detail: `${formatShortDate(event.date)} · ${plural(count)}`,
-      });
-    }
+  // The timeline lists pay days only. Due-day reminders still exist; they are just not shown here.
+  for (const event of events
+    .filter((e) => e.items.some((i) => i.kind === 'pay-day'))
+    .slice(0, TIMELINE_EVENTS)) {
+    const count = event.items
+      .filter((i) => i.kind === 'pay-day')
+      .reduce((n, i) => n + i.billIds.length, 0);
+    timeline.push({
+      kind: 'pay-day',
+      date: event.date,
+      label: 'Pay day',
+      detail: `${formatShortDate(event.date)} · ${plural(count)}`,
+    });
   }
 
   const banner = focusGroup
@@ -337,7 +325,6 @@ export const buildHomeView = (input: HomeInput): HomeView => {
       month,
       today,
       plan.groups.map((g) => g.payDay),
-      unpaid.map((c) => c.dueDate),
     ),
   };
 };

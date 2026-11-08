@@ -169,14 +169,13 @@ describe('empty state, banner and calendar', () => {
     expect(view.banner).toBe('Reminders on. Pay day: Tue, 3 Mar at 9:00 am.');
   });
 
-  it('marks the pay day and due dates on a calendar for the pay day month', () => {
+  it('marks only the pay day on a calendar for the pay day month, never due dates', () => {
     const view = buildHomeView({ today: '2026-02-26', cards, paidCardIds: [] });
     expect(view.calendar).toEqual({
       month: '2026-03',
       title: 'March 2026',
       today: '2026-02-26',
       payDays: ['2026-03-03'],
-      dueDates: ['2026-03-08', '2026-03-10', '2026-03-12'],
     });
   });
 
@@ -186,7 +185,7 @@ describe('empty state, banner and calendar', () => {
       cards,
       paidCardIds: ['hdfc', 'axis', 'sbi'],
     });
-    expect(view.calendar).toMatchObject({ month: '2026-03', payDays: [], dueDates: [] });
+    expect(view.calendar).toMatchObject({ month: '2026-03', payDays: [] });
   });
 });
 
@@ -202,14 +201,27 @@ describe('statement dates on Home', () => {
 });
 
 describe('reminder timeline (the status section)', () => {
-  it('starts at today and lists the next reminders in order, with no heads-up rows', () => {
+  it('starts at today and lists the pay days only: no due dates, no heads-ups', () => {
     const view = buildHomeView({ today: '2026-02-26', cards, paidCardIds: [] });
     expect(view.timeline.map((t) => [t.kind, t.date, t.label, t.detail])).toEqual([
       ['today', '2026-02-26', 'Today', 'Thu, 26 Feb'],
       ['pay-day', '2026-03-03', 'Pay day', 'Tue, 3 Mar · 3 bills'],
-      ['due', '2026-03-08', 'Due', 'Sun, 8 Mar · 1 bill'],
-      ['due', '2026-03-10', 'Due', 'Tue, 10 Mar · 1 bill'],
-      ['due', '2026-03-12', 'Due', 'Thu, 12 Mar · 1 bill'],
+    ]);
+  });
+
+  it('lists each separate pay day in order', () => {
+    const view = buildHomeView({
+      today: '2026-03-06',
+      cards: [
+        { id: 'a', name: 'HDFC A', last4: '1111', dueDate: '2026-03-11', tone: 'forest' },
+        { id: 'b', name: 'Axis B', last4: '2222', dueDate: '2026-03-20', tone: 'olive' },
+      ],
+      paidCardIds: [],
+    });
+    expect(view.timeline.map((t) => [t.kind, t.date])).toEqual([
+      ['today', '2026-03-06'],
+      ['pay-day', '2026-03-06'],
+      ['pay-day', '2026-03-13'],
     ]);
   });
 
@@ -235,9 +247,6 @@ describe('a missed pay day', () => {
       ['today', '2026-03-05', 'Today', 'Thu, 5 Mar'],
       ['missed', '2026-03-03', 'Pay day missed', 'Tue, 3 Mar · 3 bills'],
       ['pay-day', '2026-03-05', 'Pay day', 'Thu, 5 Mar · 3 bills'],
-      ['due', '2026-03-08', 'Due', 'Sun, 8 Mar · 1 bill'],
-      ['due', '2026-03-10', 'Due', 'Tue, 10 Mar · 1 bill'],
-      ['due', '2026-03-12', 'Due', 'Thu, 12 Mar · 1 bill'],
     ]);
   });
 

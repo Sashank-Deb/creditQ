@@ -135,7 +135,10 @@ export default function SpendsView({ today, cards, payments }: SpendsViewProps) 
               </div>
               <span className={styles.cardAmount}>{formatRupees(paise)}</span>
               <span className={styles.track} aria-hidden="true">
-                <span style={{ width: `${(paise / cardMax) * 100}%` }} />
+                <span
+                  className={styles[`bar-${card.tone}`]}
+                  style={{ width: `${(paise / cardMax) * 100}%` }}
+                />
               </span>
             </li>
           ))}

@@ -199,18 +199,18 @@ html:root {
   }
 }
 
-/* Calendar and timeline marks: today is blue, a due date is red, the pay day is the brand ink. */
+/* Calendar and timeline marks: today is blue, the pay day is peach. Due dates are not marked. */
 html:root {
   --cal-today: #2f5bea;
   --cal-today-ink: #ffffff;
-  --cal-due: #e58f68;
-  --cal-due-ink: #2f1409;
+  --cal-pay: #e58f68;
+  --cal-pay-ink: #2f1409;
 }
 @media (prefers-color-scheme: dark) {
   html:root {
     --cal-today: #8da4ff;
     --cal-today-ink: #101528;
-    --cal-due: #e58f68;
-    --cal-due-ink: #2f1409;
+    --cal-pay: #e58f68;
+    --cal-pay-ink: #2f1409;
   }
 }

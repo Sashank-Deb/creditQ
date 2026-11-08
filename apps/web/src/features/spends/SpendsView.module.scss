@@ -199,10 +199,21 @@
   background: var(--bg-tertiary);
   overflow: hidden;
 
-  span {
+  // Each card's bar wears that card's own colour, so it reads as the same card.
+  > span {
     display: block;
     height: 100%;
     border-radius: radius(pill);
     background: var(--chart-bar);
+    // A hairline keeps pale (sand) and dark (black) bars visible on either track.
+    box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.14);
+  }
+}
+
+@each $tone,
+  $n in ('forest': 1, 'terracotta': 2, 'sand': 3, 'olive': 4, 'slate': 5, 'burgundy': 6, 'black': 7)
+{
+  .track > .bar-#{$tone} {
+    background: linear-gradient(90deg, var(--tile-#{$n}-from), var(--tile-#{$n}-to));
   }
 }

@@ -94,9 +94,20 @@
     // An empty date field is blank on iOS Safari, so say what it wants. Chrome and others
     // already show "dd/mm/yyyy"; this only applies where `-webkit-touch-callout` exists (iOS).
     @supports (-webkit-touch-callout: none) {
+      // Out of the flow: as a normal block it sat above iOS's own blank value line and made
+      // the field twice as tall, with the text stuck to the top.
       &[data-empty='true']::before {
         content: attr(placeholder);
         color: var(--content-tertiary);
+        position: absolute;
+        left: space(400);
+        right: space(900);
+        top: 50%;
+        transform: translateY(-50%);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        pointer-events: none;
       }
     }
 

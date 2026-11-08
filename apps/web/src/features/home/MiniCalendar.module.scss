@@ -50,22 +50,15 @@ $cell: 20px;
   font-weight: 700;
 }
 
-// Pay day uses the brand ink; a due date is red. These win over plain "today".
+// The pay day is peach with dark digits. It wins over plain "today".
 .pay {
-  background: var(--bg-inverse-primary);
-  color: var(--content-inverse-primary);
+  background: var(--cal-pay);
+  color: var(--cal-pay-ink);
   font-weight: 700;
 }
 
-.due {
-  background: var(--cal-due);
-  color: var(--cal-due-ink);
-  font-weight: 700;
-}
-
-// Today that is also a pay day or due date keeps that fill and gets a blue ring.
-.today.pay,
-.today.due {
+// Today that is also the pay day keeps the peach fill and gets a blue ring.
+.today.pay {
   box-shadow:
     0 0 0 1.5px var(--bg-secondary),
     0 0 0 3px var(--cal-today);
@@ -98,9 +91,5 @@ $cell: 20px;
 }
 
 .payDot {
-  background: var(--bg-inverse-primary);
-}
-
-.dueDot {
-  background: var(--cal-due);
+  background: var(--cal-pay);
 }

@@ -7,16 +7,12 @@ const WEEKDAYS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 /** Read-only month view: the pay day filled, due dates ringed, today underlined. */
 export default function MiniCalendar({ calendar }: { calendar: CalendarView }) {
   const pay = new Set(calendar.payDays);
-  const due = new Set(calendar.dueDates);
-  const summary = [
-    ...calendar.payDays.map((d) => `Pay day ${formatShortDate(d)}`),
-    ...calendar.dueDates.map((d) => `Due ${formatShortDate(d)}`),
-  ].join('. ');
+  const summary = calendar.payDays.map((d) => `Pay day ${formatShortDate(d)}`).join('. ');
 
   return (
     <figure
       className={styles.calendar}
-      aria-label={`${calendar.title}. ${summary || 'Nothing due.'}`}
+      aria-label={`${calendar.title}. ${summary || 'No pay day this month.'}`}
     >
       <figcaption className={styles.title}>{calendar.title}</figcaption>
       <div className={styles.grid} aria-hidden="true">
@@ -36,7 +32,6 @@ export default function MiniCalendar({ calendar }: { calendar: CalendarView }) {
             const classes = [
               styles.day,
               pay.has(d) ? styles.pay : '',
-              due.has(d) ? styles.due : '',
               d === calendar.today ? styles.today : '',
             ].join(' ');
             return (
@@ -52,9 +47,6 @@ export default function MiniCalendar({ calendar }: { calendar: CalendarView }) {
         </span>
         <span>
           <i className={styles.payDot} /> Pay day
-        </span>
-        <span>
-          <i className={styles.dueDot} /> Due
         </span>
       </div>
     </figure>

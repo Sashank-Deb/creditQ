@@ -90,7 +90,7 @@ $gutter: 20px;
 }
 
 .pay-day .dot {
-  background: var(--bg-inverse-primary);
+  background: var(--cal-pay);
 }
 
 .missed .dot {
@@ -152,10 +152,6 @@ $gutter: 20px;
   .alert {
     animation: none;
   }
-}
-
-.due .dot {
-  background: var(--cal-due);
 }
 
 // The next thing to happen is the strongest: the first row after "Today".
