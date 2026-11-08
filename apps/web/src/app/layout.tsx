@@ -12,7 +12,7 @@ const display = Fraunces({
 });
 const mono = JetBrainsMono({ variable: '--font-mono', subsets: ['latin'], weight: ['500'] });
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://cards.creditq.vercel.app';
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://credit-q.vercel.app';
 
 export const metadata: Metadata = {
   metadataBase: new URL(APP_URL),

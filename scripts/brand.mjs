@@ -96,7 +96,7 @@ out(
     kicker: 'Credit card bill reminders',
     lines: ['Your cards, your phone,', 'nobody else.'],
     sub: 'Offline, encrypted, no account.',
-    host: 'cards.creditq.vercel.app',
+    host: 'credit-q.vercel.app',
   }),
 );
 
