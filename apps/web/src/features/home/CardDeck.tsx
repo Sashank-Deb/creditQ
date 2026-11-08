@@ -3,7 +3,6 @@
 import Link from 'next/link';
 import { useEffect, useId, useRef, useState, type CSSProperties } from 'react';
 import { IssuerBadge } from '@/components/CardTile';
-import { playShuffle } from '@/lib/sound';
 import { deckPositions } from './deck-order';
 import type { DeckCard } from './home-view';
 import styles from './CardDeck.module.scss';
@@ -102,7 +101,6 @@ export default function CardDeck({ title, cards }: { title: string; cards: reado
                   className={styles.strip}
                   onClick={() => {
                     picked.current = true;
-                    playShuffle();
                     setInteracted(true);
                     setTopId(c.cardId);
                   }}

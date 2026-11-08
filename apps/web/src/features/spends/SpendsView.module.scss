@@ -185,3 +185,26 @@
     }
   }
 }
+
+// ---- filters ----
+.filters {
+  display: flex;
+  gap: space(200);
+}
+
+.chip {
+  @include state-layer;
+  @include type(label-s);
+  height: 36px;
+  padding: 0 space(400);
+  border: 0;
+  border-radius: radius(pill);
+  background: var(--bg-tertiary);
+  color: var(--content-secondary);
+  @include motion((background-color, color));
+
+  &[aria-pressed='true'] {
+    background: var(--bg-inverse-primary);
+    color: var(--content-inverse-primary);
+  }
+}
