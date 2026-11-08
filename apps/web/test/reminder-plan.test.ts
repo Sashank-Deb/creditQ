@@ -37,8 +37,7 @@ describe('buildReminderPlan', () => {
     const plan = buildReminderPlan({ today: '2026-11-20', cards, bills, settings });
     expect(plan.map((n) => [n.date, n.title])).toEqual([
       ['2026-11-27', 'Pay day: 2 card bills'],
-      ['2026-12-01', '1 bill due in 2 days'],
-      ['2026-12-03', '1 bill due today, 1 bill due in 2 days'],
+      ['2026-12-03', '1 bill due today'],
       ['2026-12-05', '1 bill due today'],
     ]);
     expect(JSON.stringify(plan)).not.toContain('HDFC');

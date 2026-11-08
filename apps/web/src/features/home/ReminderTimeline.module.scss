@@ -93,8 +93,65 @@ $gutter: 20px;
   background: var(--bg-inverse-primary);
 }
 
-.follow-up .dot {
-  background: var(--warning);
+.missed .dot {
+  background: var(--negative);
+}
+
+.missed .label {
+  color: var(--negative);
+}
+
+// The error icon takes the dot's place on the rail and buzzes for about half a second,
+// then rests, every 5 seconds.
+.alert {
+  grid-row: 1 / span 2;
+  margin: 0 0 0 0;
+  position: relative;
+  z-index: 1;
+  color: var(--negative);
+  // A ring in the page colour keeps the rail line from touching the icon.
+  border-radius: 50%;
+  box-shadow: 0 0 0 3px var(--bg-primary);
+  animation: buzz 5s ease-in-out infinite;
+  transform-origin: 50% 60%;
+}
+
+@keyframes buzz {
+  0%,
+  13%,
+  100% {
+    transform: translateX(0) rotate(0);
+  }
+
+  2% {
+    transform: translateX(-2px) rotate(-14deg);
+  }
+
+  4% {
+    transform: translateX(2px) rotate(14deg);
+  }
+
+  6% {
+    transform: translateX(-2px) rotate(-11deg);
+  }
+
+  8% {
+    transform: translateX(2px) rotate(11deg);
+  }
+
+  10% {
+    transform: translateX(-1px) rotate(-6deg);
+  }
+
+  12% {
+    transform: translateX(1px) rotate(4deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .alert {
+    animation: none;
+  }
 }
 
 .due .dot {

@@ -3,7 +3,7 @@
  * projected into notifications, the in-app banner and the .ics calendar file.
  * Text templates have no amount placeholder, so no amount can ever leak into a reminder.
  */
-import { compareDates, diffDays, fromDayNumber, toDayNumber, type CivilDate } from './civil-date';
+import { compareDates, fromDayNumber, toDayNumber, type CivilDate } from './civil-date';
 import type { ReminderEvent, ReminderKind } from './reminders';
 
 /** `minimal` (default) keeps card names out of notifications and calendars that sync to clouds. */
@@ -100,21 +100,6 @@ export const buildNotices = (
       parts.push(`Pay day: ${plural(payDay.length, 'card bill', 'card bills')}`);
     const dueToday = event.items.filter((i) => i.kind === 'due-today').flatMap((i) => i.billIds);
     if (dueToday.length > 0) parts.push(`${plural(dueToday.length, 'bill', 'bills')} due today`);
-    // Group follow-ups by how far away they are: rolling off weekends can make it 3 days.
-    const ahead = new Map<number, number>();
-    event.items
-      .filter((i) => i.kind === 'follow-up')
-      .flatMap((i) => i.billIds)
-      .forEach((id) => {
-        const n = diffDays(due(id), event.date);
-        ahead.set(n, (ahead.get(n) ?? 0) + 1);
-      });
-    [...ahead.entries()]
-      .sort(([a], [b]) => a - b)
-      .forEach(([days, count]) =>
-        parts.push(`${plural(count, 'bill', 'bills')} due in ${days} days`),
-      );
-
     const billIds = [...new Set(event.items.flatMap((i) => i.billIds))].sort(
       (a, b) => compareDates(due(a), due(b)) || a.localeCompare(b),
     );

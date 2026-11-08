@@ -155,7 +155,7 @@ describe('reminderPreview', () => {
     expect(p).toEqual({
       headline: 'Pay day: Tue, 3 Mar',
       detail:
-        '5 days before your earliest due date. One reminder for all 3 cards, then a nudge 2 days before and on the due day if unpaid.',
+        '5 days before your earliest due date. One reminder for all 3 cards, then another on each due day if unpaid.',
       notification: 'Pay day: 3 card bills. Due 8, 10 and 12 Mar. Tap to open.',
     });
   });

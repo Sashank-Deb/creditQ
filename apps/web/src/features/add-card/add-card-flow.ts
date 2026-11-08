@@ -167,8 +167,8 @@ export const reminderPreview = (
   const bills = count === 1 ? '1 card bill' : `${count} card bills`;
   const detail =
     count === 1
-      ? `${leadDays} days before the due date at ${reminderTime}. One reminder, then a nudge 2 days before and on the due day if unpaid.`
-      : `${leadDays} days before your earliest due date. One reminder for all ${count} cards, then a nudge 2 days before and on the due day if unpaid.`;
+      ? `${leadDays} days before the due date at ${reminderTime}. One reminder, then another on the due day if unpaid.`
+      : `${leadDays} days before your earliest due date. One reminder for all ${count} cards, then another on each due day if unpaid.`;
   return {
     headline: `Pay day: ${formatShortDate(group.payDay)}`,
     detail,

@@ -106,14 +106,14 @@ describe('statement dates on Home', () => {
 });
 
 describe('reminder timeline (the status section)', () => {
-  it('starts at today and lists the next reminders in order, most urgent label per day', () => {
+  it('starts at today and lists the next reminders in order, with no heads-up rows', () => {
     const view = buildHomeView({ today: '2026-02-26', cards, paidCardIds: [] });
     expect(view.timeline.map((t) => [t.kind, t.date, t.label, t.detail])).toEqual([
       ['today', '2026-02-26', 'Today', 'Thu, 26 Feb'],
       ['pay-day', '2026-03-03', 'Pay day', 'Tue, 3 Mar · 3 bills'],
-      ['follow-up', '2026-03-06', 'Heads-up', 'Fri, 6 Mar · 2 bills'],
       ['due', '2026-03-08', 'Due', 'Sun, 8 Mar · 1 bill'],
       ['due', '2026-03-10', 'Due', 'Tue, 10 Mar · 1 bill'],
+      ['due', '2026-03-12', 'Due', 'Thu, 12 Mar · 1 bill'],
     ]);
   });
 
@@ -129,5 +129,39 @@ describe('reminder timeline (the status section)', () => {
   it('carries no amounts', () => {
     const view = buildHomeView({ today: '2026-02-26', cards, paidCardIds: [] });
     expect(JSON.stringify(view.timeline)).not.toMatch(/₹|amount/i);
+  });
+});
+
+describe('a missed pay day', () => {
+  it('shows "Pay day missed" with the date it was, then the catch-up pay day that will actually remind', () => {
+    const view = buildHomeView({ today: '2026-03-05', cards, paidCardIds: [] });
+    expect(view.timeline.map((t) => [t.kind, t.date, t.label, t.detail])).toEqual([
+      ['today', '2026-03-05', 'Today', 'Thu, 5 Mar'],
+      ['missed', '2026-03-03', 'Pay day missed', 'Tue, 3 Mar · 3 bills'],
+      ['pay-day', '2026-03-05', 'Pay day', 'Thu, 5 Mar · 3 bills'],
+      ['due', '2026-03-08', 'Due', 'Sun, 8 Mar · 1 bill'],
+      ['due', '2026-03-10', 'Due', 'Tue, 10 Mar · 1 bill'],
+      ['due', '2026-03-12', 'Due', 'Thu, 12 Mar · 1 bill'],
+    ]);
+  });
+
+  it('is not missed while the pay day is today or later', () => {
+    const view = buildHomeView({ today: '2026-03-03', cards, paidCardIds: [] });
+    expect(view.timeline.some((t) => t.kind === 'missed')).toBe(false);
+    expect(view.timeline[1]).toMatchObject({ kind: 'pay-day', date: '2026-03-03' });
+  });
+
+  it('is not missed once the remaining cards have a later pay day of their own', () => {
+    const view = buildHomeView({ today: '2026-03-05', cards, paidCardIds: ['hdfc'] });
+    expect(view.timeline.some((t) => t.kind === 'missed')).toBe(false);
+  });
+
+  it('is not missed when everything is paid', () => {
+    const view = buildHomeView({
+      today: '2026-03-05',
+      cards,
+      paidCardIds: ['hdfc', 'axis', 'sbi'],
+    });
+    expect(view.timeline.map((t) => t.kind)).toEqual(['today']);
   });
 });

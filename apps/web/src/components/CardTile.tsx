@@ -2,6 +2,7 @@ import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { detectIssuer, type Issuer } from '@creditq/core';
 import type { TilePattern, TileTone } from '@creditq/vault';
+import CardChip from './CardChip';
 import styles from './CardTile.module.scss';
 
 interface CardTileProps {
@@ -76,7 +77,7 @@ export default function CardTile({
         )}
       </div>
       <div className={styles.middle}>
-        <div className={styles.chip} aria-hidden="true" />
+        <CardChip className={styles.chip} />
         <span className={styles.digits}>•••• {digits}</span>
       </div>
       <div className={focus ? styles.dueFocus : styles.due}>{paid ? 'Paid' : dueLabel}</div>

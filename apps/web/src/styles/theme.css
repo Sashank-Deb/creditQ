@@ -203,14 +203,14 @@ html:root {
 html:root {
   --cal-today: #2f5bea;
   --cal-today-ink: #ffffff;
-  --cal-due: #c62f2f;
-  --cal-due-ink: #ffffff;
+  --cal-due: #e58f68;
+  --cal-due-ink: #2f1409;
 }
 @media (prefers-color-scheme: dark) {
   html:root {
     --cal-today: #8da4ff;
     --cal-today-ink: #101528;
-    --cal-due: #ff8a7a;
-    --cal-due-ink: #3b0f0a;
+    --cal-due: #e58f68;
+    --cal-due-ink: #2f1409;
   }
 }

@@ -19,7 +19,27 @@ export default function ReminderTimeline({ items, time }: ReminderTimelineProps)
       <ol className={styles.list}>
         {items.map((item) => (
           <li key={`${item.kind}-${item.date}`} className={`${styles.item} ${styles[item.kind]}`}>
-            <span className={styles.dot} aria-hidden="true" />
+            {item.kind === 'missed' ? (
+              <svg
+                className={styles.alert}
+                viewBox="0 0 24 24"
+                width="20"
+                height="20"
+                role="img"
+                aria-label="Missed"
+              >
+                <circle cx="12" cy="12" r="11" fill="currentColor" />
+                <path
+                  d="M12 6.5v7M12 16.6v.4"
+                  stroke="var(--bg-primary)"
+                  strokeWidth="2.6"
+                  strokeLinecap="round"
+                  fill="none"
+                />
+              </svg>
+            ) : (
+              <span className={styles.dot} aria-hidden="true" />
+            )}
             <span className={styles.label}>{item.label}</span>
             <span className={styles.detail}>{item.detail}</span>
           </li>

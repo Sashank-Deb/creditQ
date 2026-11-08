@@ -3,6 +3,8 @@
  * screen shows. Pure, so it is unit-tested without a browser. No amounts, by design.
  */
 import {
+  addDays,
+  compareDates,
   createCalendar,
   detectIssuer,
   formatCountdown,
@@ -64,7 +66,7 @@ export interface CalendarView {
 }
 
 export interface TimelineItem {
-  kind: 'today' | 'pay-day' | 'follow-up' | 'due';
+  kind: 'today' | 'pay-day' | 'missed' | 'due';
   date: CivilDate;
   label: string;
   detail: string;
@@ -108,11 +110,10 @@ const TIMELINE_EVENTS = 4;
 
 const plural = (n: number) => `${n} ${n === 1 ? 'bill' : 'bills'}`;
 
-// A day with several reminders shows its most urgent one.
+// A day with a due date shows "Due"; otherwise it is the pay day.
 const PRIORITY = [
   { item: 'due-today', kind: 'due', label: 'Due' },
   { item: 'pay-day', kind: 'pay-day', label: 'Pay day' },
-  { item: 'follow-up', kind: 'follow-up', label: 'Heads-up' },
 ] as const;
 
 const capitalise = (s: string): string => s.charAt(0).toUpperCase() + s.slice(1);
@@ -211,15 +212,35 @@ export const buildHomeView = (input: HomeInput): HomeView => {
         : 'Paid',
     }));
 
+  // Was the pay day missed? Plan again as if from long ago, so the day is not pushed to today.
+  // Any such group that still has unpaid cards had its pay day pass without being paid.
+  const ideal = planPayDays({
+    today: addDays(today, -60),
+    calendar,
+    config: { ...config, horizonDays: 240 },
+    bills: unpaid.map((c) => toBill(c, 'open')),
+  });
+  const missedGroups = ideal.groups.filter((g) => compareDates(g.payDay, today) < 0);
+  const missedCount = missedGroups.reduce((n, g) => n + g.billIds.length, 0);
+  const missedDay = missedGroups[0]?.payDay;
+
   const events = planReminders({
     today,
-    calendar,
     groups: plan.groups,
     bills: unpaid.map((c) => toBill(c, 'open')),
   });
+
   const timeline: TimelineItem[] = [
     { kind: 'today', date: today, label: 'Today', detail: formatShortDate(today) },
   ];
+  if (missedDay) {
+    timeline.push({
+      kind: 'missed',
+      date: missedDay,
+      label: 'Pay day missed',
+      detail: `${formatShortDate(missedDay)} · ${plural(missedCount)}`,
+    });
+  }
   for (const event of events.slice(0, TIMELINE_EVENTS)) {
     const top = PRIORITY.find((p) => event.items.some((i) => i.kind === p.item));
     if (top) {

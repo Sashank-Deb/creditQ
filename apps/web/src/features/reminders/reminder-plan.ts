@@ -35,7 +35,7 @@ export const buildReminderPlan = ({ today, cards, bills, settings }: PlanInput):
     bills: inputs,
     config: { leadDays: settings.leadDays },
   });
-  const events = planReminders({ today, groups, bills: inputs, calendar });
+  const events = planReminders({ today, groups, bills: inputs });
   const byCard = new Map(cards.map((c) => [c.id, c]));
   const labels = new Map<string, CardLabel>();
   bills.forEach((b) => {

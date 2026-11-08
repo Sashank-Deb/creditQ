@@ -24,7 +24,6 @@ const today = '2026-11-20';
 const events = planReminders({
   today,
   bills,
-  calendar,
   groups: planPayDays({ today, bills, calendar }).groups,
 });
 const dueDates = new Map(bills.map((b) => [b.id, b.dueDate]));
@@ -51,9 +50,7 @@ describe('buildNotices: one reminder per day, never an amount', () => {
   it('coalesces each date into one notice at 9:00 am IST', () => {
     expect(notices.map((n) => [n.date, n.title])).toEqual([
       ['2026-11-27', 'Pay day: 3 card bills'],
-      ['2026-12-01', '1 bill due in 2 days'],
-      ['2026-12-03', '1 bill due today, 1 bill due in 2 days'],
-      ['2026-12-04', '1 bill due in 3 days'], // 5 Dec is a Saturday, so it rolled earlier
+      ['2026-12-03', '1 bill due today'],
       ['2026-12-05', '1 bill due today'],
       ['2026-12-07', '1 bill due today'],
     ]);
@@ -94,7 +91,7 @@ describe('toIcs (RFC 5545)', () => {
       ics.startsWith('BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//CreditQ//reminders 1//EN\r\n'),
     ).toBe(true);
     expect(ics.endsWith('END:VCALENDAR\r\n')).toBe(true);
-    expect(ics.split('BEGIN:VEVENT').length - 1).toBe(6);
+    expect(ics.split('BEGIN:VEVENT').length - 1).toBe(4);
     expect(ics).not.toMatch(/[^\r]\n/);
   });
 
