@@ -227,6 +227,8 @@ function Flow({ today, onAgain }: { today: string; onAgain: () => void }) {
             <input
               id="card-statement"
               type="date"
+              placeholder="Select statement date"
+              data-empty={state.statementDate === ''}
               className={styles.input}
               value={state.statementDate}
               max={lastDayOfMonth(today)}
@@ -253,6 +255,8 @@ function Flow({ today, onAgain }: { today: string; onAgain: () => void }) {
             <input
               id="card-due"
               type="date"
+              placeholder="Select due date"
+              data-empty={state.dueDate === ''}
               className={styles.input}
               value={state.dueDate}
               min={state.statementDate || today}

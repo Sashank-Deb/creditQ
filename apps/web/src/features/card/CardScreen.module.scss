@@ -24,6 +24,8 @@
 
 .field {
   display: grid;
+  // Without this a wide child (an iOS date input) stretches the column past the screen.
+  grid-template-columns: minmax(0, 1fr);
   gap: space(200);
 }
 

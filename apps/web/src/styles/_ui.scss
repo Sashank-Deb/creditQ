@@ -32,7 +32,10 @@
 
 @mixin field {
   @include type(paragraph-m);
+  position: relative;
   width: 100%;
+  max-width: 100%;
+  min-width: 0;
   box-sizing: border-box;
   height: 48px;
   padding: 0 space(400);
@@ -48,6 +51,51 @@
 
   &[aria-invalid='true'] {
     border-color: var(--negative);
+  }
+
+  // Date fields. iOS Safari sizes a native date input from its inner date text and ignores
+  // `width: 100%`, so it spills off the right edge. Taking over the appearance and letting
+  // the box shrink (min-width: 0) keeps it inside its container on every device.
+  &[type='date'] {
+    appearance: none;
+    -webkit-appearance: none;
+    display: block;
+    min-width: 0;
+    max-width: 100%;
+    text-align: left;
+    padding-right: space(900);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%231F3A2F' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3.5' y='5' width='17' height='15' rx='3'/%3E%3Cpath d='M8 3v4M16 3v4M3.5 10h17'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right space(400) center;
+    background-size: 20px 20px;
+
+    &::-webkit-date-and-time-value {
+      text-align: left;
+      min-width: 0;
+    }
+
+    &::-webkit-calendar-picker-indicator {
+      // The icon above replaces it; keep the whole field tappable.
+      opacity: 0;
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      cursor: pointer;
+    }
+
+    // An empty date field is blank on iOS Safari, so say what it wants. Chrome and others
+    // already show "dd/mm/yyyy"; this only applies where `-webkit-touch-callout` exists (iOS).
+    @supports (-webkit-touch-callout: none) {
+      &[data-empty='true']::before {
+        content: attr(placeholder);
+        color: var(--content-tertiary);
+      }
+    }
+
+    @media (prefers-color-scheme: dark) {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23EEF2EC' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3.5' y='5' width='17' height='15' rx='3'/%3E%3Cpath d='M8 3v4M16 3v4M3.5 10h17'/%3E%3C/svg%3E");
+    }
   }
 
   // Dropdowns: hide the browser arrow (it hugs the edge) and draw a chevron 16px in.

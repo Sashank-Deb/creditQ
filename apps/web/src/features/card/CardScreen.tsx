@@ -88,6 +88,7 @@ function Editor({
         id={`edit-${id}`}
         className={styles.input}
         value={form[id]}
+        data-empty={form[id] === ''}
         aria-invalid={Boolean(errors[id])}
         aria-describedby={`edit-${id}-msg`}
         onChange={(e) => set(id, e.target.value)}
@@ -179,13 +180,13 @@ function Editor({
         {field(
           'statementDate',
           'Statement date',
-          { type: 'date', max: form.dueDate || undefined },
+          { type: 'date', placeholder: 'Select statement date', max: form.dueDate || undefined },
           'When the bill is generated. The card comes back as due from this date each month.',
         )}
         {field(
           'dueDate',
           bill?.status === 'paid' ? 'Next due date' : 'Due date',
-          { type: 'date', min: today },
+          { type: 'date', placeholder: 'Select due date', min: today },
           'Repeats every month on this day.',
         )}
         <div className={styles.field}>
