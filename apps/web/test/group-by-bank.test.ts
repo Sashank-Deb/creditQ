@@ -15,8 +15,16 @@ describe('groupSpendByBank', () => {
       { a: 10_000, b: 5_000, c: 30_000 },
     );
     expect(rows).toEqual([
-      { bank: 'Axis Bank', paise: 30_000, cardCount: 1 },
-      { bank: 'HDFC Bank', paise: 15_000, cardCount: 2 },
+      { bank: 'Axis Bank', paise: 30_000, cardCount: 1, cards: [{ id: 'c', paise: 30_000 }] },
+      {
+        bank: 'HDFC Bank',
+        paise: 15_000,
+        cardCount: 2,
+        cards: [
+          { id: 'a', paise: 10_000 },
+          { id: 'b', paise: 5_000 },
+        ],
+      },
     ]);
   });
 
@@ -27,12 +35,12 @@ describe('groupSpendByBank', () => {
 
   it('puts cards without a bank under Other', () => {
     const rows = groupSpendByBank([card('a'), card('b', 'Other')], { a: 100, b: 50 });
-    expect(rows).toEqual([{ bank: 'Other', paise: 150, cardCount: 2 }]);
+    expect(rows).toMatchObject([{ bank: 'Other', paise: 150, cardCount: 2 }]);
   });
 
   it('treats bank names case-insensitively and ignores spaces', () => {
     const rows = groupSpendByBank([card('a', 'Kotak'), card('b', ' kotak ')], { a: 1, b: 2 });
-    expect(rows).toEqual([{ bank: 'Kotak', paise: 3, cardCount: 2 }]);
+    expect(rows).toMatchObject([{ bank: 'Kotak', paise: 3, cardCount: 2 }]);
   });
 
   it('breaks ties by bank name so the order is stable', () => {

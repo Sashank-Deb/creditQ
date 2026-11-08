@@ -208,3 +208,32 @@
     color: var(--content-inverse-primary);
   }
 }
+
+// ---- banks: a header with the bank total, then that bank's cards ----
+.banks {
+  display: grid;
+  gap: space(400);
+}
+
+.bank {
+  display: grid;
+  gap: space(300);
+  padding: space(400);
+  border-radius: radius(default);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-opaque);
+}
+
+.bankHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: space(300);
+  padding-bottom: space(300);
+  border-bottom: 1px solid var(--border-transparent);
+}
+
+.bankName {
+  @include type(heading-xs);
+  margin: 0;
+}

@@ -7,6 +7,8 @@ export interface BankSpend {
   bank: string;
   paise: number;
   cardCount: number;
+  /** The cards that paid something, biggest first. */
+  cards: { id: string; paise: number }[];
 }
 
 const OTHER = 'Other';
@@ -22,8 +24,13 @@ export const groupSpendByBank = (
     if (paise > 0) {
       const name = card.bank?.trim() || OTHER;
       const key = name.toLowerCase();
-      const row = groups.get(key) ?? { bank: name, paise: 0, cardCount: 0 };
-      groups.set(key, { ...row, paise: row.paise + paise, cardCount: row.cardCount + 1 });
+      const row = groups.get(key) ?? { bank: name, paise: 0, cardCount: 0, cards: [] };
+      groups.set(key, {
+        ...row,
+        paise: row.paise + paise,
+        cardCount: row.cardCount + 1,
+        cards: [...row.cards, { id: card.id, paise }].sort((a, b) => b.paise - a.paise),
+      });
     }
   }
   return [...groups.values()].sort((a, b) => b.paise - a.paise || a.bank.localeCompare(b.bank));

@@ -1,7 +1,8 @@
 @use '../../styles/tokens' as *;
 @use '../../styles/ui' as *;
 
-$strip: 56px; // visible part of each stacked card
+$strip: 46px; // visible part of each stacked card
+$inset: 10px; // each card further back is narrower by this much on both sides
 $card-height: 168px;
 
 .section {
@@ -48,8 +49,11 @@ $card-height: 168px;
 // leaving a $strip-tall edge visible, like a fanned deck.
 .card {
   position: absolute;
-  left: 0;
-  right: 0;
+  // How many cards are in front of this one (0 for the front card); the deeper, the narrower,
+  // so the stack looks layered, like the cards sit one behind the other.
+  --depth: min(calc(var(--count) - 1 - var(--pos)), 3);
+  left: calc(var(--depth) * #{$inset});
+  right: calc(var(--depth) * #{$inset});
   top: 0;
   height: $card-height;
   // The deck position (0 = back) decides both the height in the stack and what is on top.
@@ -62,6 +66,8 @@ $card-height: 168px;
   // A soft spring: the cards glide into place with a hair of overshoot, then settle.
   transition:
     transform 640ms cubic-bezier(0.34, 1.28, 0.5, 1),
+    left 640ms cubic-bezier(0.34, 1.28, 0.5, 1),
+    right 640ms cubic-bezier(0.34, 1.28, 0.5, 1),
     box-shadow 640ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
@@ -73,7 +79,7 @@ $card-height: 168px;
   @include state-layer;
   width: 100%;
   height: $strip;
-  padding: 0 space(500);
+  padding: 0 space(400);
   border: 0;
   background: transparent;
   color: inherit;
