@@ -1,8 +1,8 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type CSSProperties } from 'react';
 import { addDays, createCalendar, formatShortDate, planPayDays } from '@creditq/core';
-import styles from './site.module.scss';
+import styles from './playground.module.scss';
 
 interface DemoCard {
   id: string;
@@ -14,12 +14,19 @@ interface DemoCard {
 const TODAY = '2026-11-08';
 
 const START: DemoCard[] = [
-  { id: 'a', name: 'HDFC Regalia', statement: '2026-11-18', due: '2026-12-06' },
-  { id: 'b', name: 'Axis Flipkart', statement: '2026-11-20', due: '2026-12-08' },
-  { id: 'c', name: 'SBI Cashback', statement: '2026-12-15', due: '2027-01-02' },
+  { id: 'a', name: 'Travel card', statement: '2026-11-18', due: '2026-12-06' },
+  { id: 'b', name: 'Shopping card', statement: '2026-11-20', due: '2026-12-08' },
+  { id: 'c', name: 'Cashback card', statement: '2026-12-15', due: '2027-01-02' },
 ];
 
 const calendar = createCalendar();
+
+const SWATCH = [1, 2, 4, 5, 6, 3];
+const swatch = (i: number): CSSProperties =>
+  ({
+    '--sw-from': `var(--tile-${SWATCH[i % SWATCH.length]}-from)`,
+    '--sw-to': `var(--tile-${SWATCH[i % SWATCH.length]}-to)`,
+  }) as CSSProperties;
 
 export default function Playground() {
   const [lead, setLead] = useState(5);
@@ -60,10 +67,12 @@ export default function Playground() {
     setCards((list) => list.map((c) => (c.id === id ? { ...c, ...patch } : c)));
 
   return (
-    <div className={styles.playground}>
-      <div className={styles.pgControls}>
-        <label className={styles.pgLead} htmlFor="lead">
-          Remind me <strong>{lead}</strong> days before the earliest due date
+    <div className={styles.root}>
+      <div className={styles.controls}>
+        <label className={styles.lead} htmlFor="lead">
+          <span>
+            Remind me <strong>{lead}</strong> days before the earliest due date
+          </span>
           <input
             id="lead"
             type="range"
@@ -72,11 +81,15 @@ export default function Playground() {
             value={lead}
             onChange={(e) => setLead(Number(e.target.value))}
           />
+          <span className={styles.scale} aria-hidden="true">
+            <span>1 day</span>
+            <span>10 days</span>
+          </span>
         </label>
-        <p className={styles.pgToday}>Pretend today is {formatShortDate(TODAY)} 2026.</p>
+        <p className={styles.today}>Pretend today is {formatShortDate(TODAY)} 2026.</p>
 
-        {cards.map((c) => (
-          <fieldset key={c.id} className={styles.pgCard}>
+        {cards.map((c, i) => (
+          <fieldset key={c.id} className={styles.card} style={swatch(i)}>
             <legend>{c.name}</legend>
             <label>
               Bill generated
@@ -97,7 +110,7 @@ export default function Playground() {
             {cards.length > 1 && (
               <button
                 type="button"
-                className={styles.pgRemove}
+                className={styles.remove}
                 onClick={() => setCards((list) => list.filter((x) => x.id !== c.id))}
               >
                 Remove
@@ -108,7 +121,7 @@ export default function Playground() {
         {cards.length < 5 && (
           <button
             type="button"
-            className={styles.btnGhost}
+            className={styles.add}
             onClick={() =>
               setCards((list) => [
                 ...list,
@@ -126,20 +139,23 @@ export default function Playground() {
         )}
       </div>
 
-      <div className={styles.pgResult} aria-live="polite">
+      <div className={styles.result} aria-live="polite">
         <h3>Your pay days</h3>
         {groups.length === 0 && <p>Pick a due date after the bill date for at least one card.</p>}
         {groups.map((g) => (
-          <article key={g.payDay} className={styles.pgGroup}>
-            <p className={styles.pgDay}>{formatShortDate(g.payDay)}</p>
-            <ul>
+          <article key={g.payDay} className={styles.group}>
+            <p className={styles.day}>
+              <small>Pay day</small>
+              <b>{formatShortDate(g.payDay)}</b>
+            </p>
+            <ul className={styles.members}>
               {g.members.map((m) => (
                 <li key={m.id}>
                   {m.name} <span>due {formatShortDate(m.due)}</span>
                 </li>
               ))}
             </ul>
-            <ul className={styles.pgWhy}>
+            <ul className={styles.why}>
               {g.why.map((w) => (
                 <li key={w}>{w}</li>
               ))}

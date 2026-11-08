@@ -5,7 +5,10 @@ import JsonLd from '../../../blog/JsonLd';
 import RichText from '../../../blog/RichText';
 import { POSTS, getPost } from '../../../blog/posts';
 import { APP_URL, SITE_NAME, SITE_PATH, SITE_URL } from '../../../site-config';
-import styles from '../../site.module.scss';
+import SiteFooter from '../../../components/SiteFooter';
+import SiteHeader from '../../../components/SiteHeader';
+import ui from '../../../components/ui.module.scss';
+import styles from '../blog.module.scss';
 
 export const dynamicParams = false;
 
@@ -84,29 +87,24 @@ export default async function PostPage({ params }: PageProps<'/blog/[slug]'>) {
           ],
         }}
       />
-      <header className={styles.nav}>
-        <Link href="/" className={styles.brand}>
-          <span className={styles.logo} aria-hidden="true" />
-          CreditQ
-        </Link>
-        <nav aria-label="Sections" className={styles.links}>
-          <Link href="/#features">Features</Link>
-          <Link href="/#pay-day">Pay day</Link>
-          <Link href="/blog">Blog</Link>
-        </nav>
-        <a href={APP_URL} className={styles.btnPrimarySmall}>
-          Open app
-        </a>
-      </header>
+      <SiteHeader />
       <main>
-        <article className={styles.article}>
+        <article className={styles.page}>
           <nav aria-label="Breadcrumb" className={styles.crumbs}>
-            <Link href="/">Home</Link> / <Link href="/blog">Blog</Link>
+            <ol>
+              <li>
+                <Link href="/">Home</Link>
+              </li>
+              <li>
+                <Link href="/blog">Blog</Link>
+              </li>
+            </ol>
           </nav>
-          <h1>{post.title}</h1>
+          <h1 className={styles.title}>{post.title}</h1>
           <p className={styles.meta}>
-            By {SITE_NAME} · <time dateTime={post.published}>{post.published}</time> ·{' '}
-            {post.readMinutes} min read
+            <span>By {SITE_NAME}</span>
+            <time dateTime={post.published}>{post.published}</time>
+            <span>{post.readMinutes} min read</span>
           </p>
           <div className={styles.prose}>
             {post.body.map((b, i) => {
@@ -150,7 +148,7 @@ export default async function PostPage({ params }: PageProps<'/blog/[slug]'>) {
           <aside className={styles.ctaBox}>
             <h2>Pay every card on one day</h2>
             <p>CreditQ works out your pay day, reminds you, and keeps your data on your phone.</p>
-            <a href={APP_URL} className={styles.btnPrimary}>
+            <a href={APP_URL} className={`${ui.btn} ${ui.accent}`}>
               Open CreditQ
             </a>
           </aside>
@@ -162,11 +160,11 @@ export default async function PostPage({ params }: PageProps<'/blog/[slug]'>) {
               </h2>
               <ul className={styles.posts}>
                 {others.map((p) => (
-                  <li key={p.slug} className={styles.card}>
-                    <h3>
-                      <Link href={`/blog/${p.slug}`}>{p.title}</Link>
-                    </h3>
-                    <p>{p.excerpt}</p>
+                  <li key={p.slug}>
+                    <Link href={`/blog/${p.slug}`}>
+                      <h3>{p.title}</h3>
+                      <p>{p.excerpt}</p>
+                    </Link>
                   </li>
                 ))}
               </ul>
@@ -174,6 +172,7 @@ export default async function PostPage({ params }: PageProps<'/blog/[slug]'>) {
           )}
         </article>
       </main>
+      <SiteFooter />
     </>
   );
 }

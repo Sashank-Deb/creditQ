@@ -35,3 +35,41 @@ body {
     scroll-behavior: auto;
   }
 }
+
+:root {
+  --today: #2f62c9;
+  --today-ink: #ffffff;
+  --payday: #e58f68;
+  --payday-ink: #2a1a10;
+  --payday-soft: rgba(229, 143, 104, 0.2);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --today: #7aa5f7;
+    --today-ink: #0e1a14;
+    --payday-soft: rgba(229, 143, 104, 0.18);
+  }
+}
+
+h1,
+h2,
+h3 {
+  text-wrap: balance;
+}
+
+p {
+  text-wrap: pretty;
+}
+
+@keyframes reveal {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
