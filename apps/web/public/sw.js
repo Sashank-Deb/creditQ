@@ -57,15 +57,79 @@ const tick = async () => {
   );
 };
 
+// ---- Offline shell: the app opens with no network once it has been loaded once. ----
+// Only the app's own files (pages, scripts, styles, fonts, icons) are cached. Nothing the
+// user entered is ever here: that lives encrypted in IndexedDB.
+const SHELL = 'creditq-shell-v1';
+
+const putIfOk = async (cache, request, response) => {
+  if (response && response.ok) await cache.put(request, response.clone());
+  return response;
+};
+
+// Fetch the given pages and the scripts/styles they point at, so every screen works offline.
+const warm = async (urls) => {
+  const cache = await caches.open(SHELL);
+  await Promise.all(
+    urls.map(async (url) => {
+      try {
+        const res = await fetch(url);
+        if (!res.ok) return;
+        const html = await res.clone().text();
+        await cache.put(url, res);
+        const assets = new Set(html.match(/\/_next\/static\/[^"'\\\s)]+/g) || []);
+        await Promise.all(
+          [...assets].map(async (asset) => {
+            if (await cache.match(asset)) return;
+            const r = await fetch(asset);
+            await putIfOk(cache, asset, r);
+          }),
+        );
+      } catch {
+        // Offline or blocked: try again on the next visit.
+      }
+    }),
+  );
+};
+
 self.addEventListener('install', () => self.skipWaiting());
 self.addEventListener('activate', (event) => {
-  event.waitUntil(self.clients.claim().then(tick));
+  event.waitUntil(
+    caches
+      .keys()
+      .then((keys) => Promise.all(keys.filter((k) => k !== SHELL).map((k) => caches.delete(k))))
+      .then(() => self.clients.claim())
+      .then(tick),
+  );
+});
+
+// Stale-while-revalidate: answer from the cache at once, refresh it in the background.
+self.addEventListener('fetch', (event) => {
+  const req = event.request;
+  if (req.method !== 'GET') return;
+  const url = new URL(req.url);
+  if (url.origin !== self.location.origin || url.pathname === '/sw.js') return;
+  event.respondWith(
+    (async () => {
+      const cache = await caches.open(SHELL);
+      const cached = await cache.match(req, { ignoreSearch: req.mode === 'navigate' });
+      const network = fetch(req)
+        .then((res) => putIfOk(cache, req, res))
+        .catch(() => null);
+      if (cached) {
+        event.waitUntil(network);
+        return cached;
+      }
+      return (await network) || Response.error();
+    })(),
+  );
 });
 self.addEventListener('periodicsync', (event) => {
   if (event.tag === 'creditq-reminders') event.waitUntil(tick());
 });
 self.addEventListener('message', (event) => {
   if (event.data && event.data.type === 'tick') event.waitUntil(tick());
+  if (event.data && event.data.type === 'warm') event.waitUntil(warm(event.data.urls));
 });
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();

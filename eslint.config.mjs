@@ -6,7 +6,8 @@ import { createTypeScriptImportResolver } from 'eslint-import-resolver-typescrip
 import globals from 'globals';
 
 // Airbnb's React and Next presets apply to the web app only.
-const webOnly = (list) => list.map((c) => ({ ...c, files: ['apps/web/**/*.{ts,tsx}'] }));
+const webOnly = (list) =>
+  list.map((c) => ({ ...c, files: ['apps/web/**/*.{ts,tsx}', 'apps/site/**/*.{ts,tsx}'] }));
 
 export default [
   {
@@ -36,7 +37,7 @@ export default [
   ]),
   {
     name: 'creditq/web-resolver',
-    files: ['apps/web/**/*.{ts,tsx}'],
+    files: ['apps/web/**/*.{ts,tsx}', 'apps/site/**/*.{ts,tsx}'],
     settings: {
       // Resolve `@/*` and workspace packages through each package's own tsconfig.
       'import-x/resolver-next': [
@@ -45,7 +46,7 @@ export default [
           noWarnOnMultipleProjects: true,
         }),
       ],
-      next: { rootDir: 'apps/web' },
+      next: { rootDir: ['apps/web', 'apps/site'] },
     },
     rules: {
       'react/jsx-filename-extension': ['error', { extensions: ['.tsx'] }],

@@ -8,6 +8,18 @@ import { buildReminderPlan, dueToShow, mergeOutbox } from './reminder-plan';
 
 const TICK_MS = 60_000;
 
+/** Pages the service worker keeps for offline use. */
+const OFFLINE_PAGES = [
+  '/',
+  '/add',
+  '/card',
+  '/settings',
+  '/settings/export',
+  '/settings/import',
+  '/privacy',
+  '/terms',
+];
+
 export const notificationsSupported = (): boolean =>
   typeof window !== 'undefined' && 'Notification' in window && 'serviceWorker' in navigator;
 
@@ -22,7 +34,13 @@ export default function ReminderRuntime() {
 
   // Register the worker once; it only ever reads the outbox.
   useEffect(() => {
-    if (notificationsSupported()) navigator.serviceWorker.register('/sw.js').catch(() => undefined);
+    if (!('serviceWorker' in navigator)) return;
+    // Also caches the app's own files so it opens offline (see public/sw.js).
+    navigator.serviceWorker
+      .register('/sw.js')
+      .then(() => navigator.serviceWorker.ready)
+      .then((reg) => reg.active?.postMessage({ type: 'warm', urls: OFFLINE_PAGES }))
+      .catch(() => undefined);
   }, []);
 
   // Re-plan whenever cards, bills or settings change.
