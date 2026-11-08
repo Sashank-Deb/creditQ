@@ -4,6 +4,7 @@
  * Text templates have no amount placeholder, so no amount can ever leak into a reminder.
  */
 import { compareDates, fromDayNumber, toDayNumber, type CivilDate } from './civil-date';
+import { formatShortDate } from './format';
 import type { ReminderEvent, ReminderKind } from './reminders';
 
 /** `minimal` (default) keeps card names out of notifications and calendars that sync to clouds. */
@@ -212,4 +213,78 @@ export const googleCalendarUrl = (n: Notice): string => {
     details: n.body,
   });
   return `https://calendar.google.com/calendar/render?${params.toString()}`;
+};
+
+// ---------- pay-day calendar file: full-day events, one per pay day ----------
+
+export interface PayDayCard {
+  name: string;
+  last4: string;
+  dueDate: CivilDate;
+}
+
+export interface PayDayEvent {
+  date: CivilDate;
+  cards: PayDayCard[];
+}
+
+export interface PayDayIcsOptions {
+  dtstamp: number;
+  /** India time 'HH:MM' for the alert on the day. */
+  time?: string;
+  uidDomain?: string;
+  calendarName?: string;
+}
+
+const ymd = (d: CivilDate): string => d.replaceAll('-', '');
+
+/**
+ * Calendar file for pay days only. Each event is a full-day entry that lists the cards to pay
+ * and their due dates, and rings at the reminder time. Due dates get no event of their own.
+ */
+export const toPayDayIcs = (events: readonly PayDayEvent[], options: PayDayIcsOptions): string => {
+  const domain = options.uidDomain ?? 'creditq.invalid';
+  const [h, m] = (options.time ?? '09:00').split(':').map(Number);
+  const trigger = `PT${h ?? 9}H${m ? `${m}M` : ''}`;
+  const lines = [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//CreditQ//pay days 1//EN',
+    'CALSCALE:GREGORIAN',
+    'METHOD:PUBLISH',
+    `X-WR-CALNAME:${escapeText(options.calendarName ?? 'CreditQ pay days')}`,
+  ];
+  for (const e of events) {
+    const cards = [...e.cards].sort(
+      (a, b) => compareDates(a.dueDate, b.dueDate) || a.name.localeCompare(b.name),
+    );
+    const title = `Pay day: ${plural(cards.length, 'credit card bill', 'credit card bills')}`;
+    const body = [
+      'Pay these card bills today:',
+      ...cards.map((c) => `• ${c.name} ••${c.last4}, due ${formatShortDate(c.dueDate)}`),
+      '',
+      'Ignore any you have already paid.',
+    ].join('\n');
+    const id = stableId(
+      `${e.date}|${cards.map((c) => `${c.name}${c.last4}${c.dueDate}`).join(',')}`,
+    );
+    lines.push(
+      'BEGIN:VEVENT',
+      `UID:${id}@${domain}`,
+      `DTSTAMP:${formatUtcStamp(options.dtstamp)}`,
+      `DTSTART;VALUE=DATE:${ymd(e.date)}`,
+      `DTEND;VALUE=DATE:${ymd(fromDayNumber(toDayNumber(e.date) + 1))}`,
+      `SUMMARY:${escapeText(title)}`,
+      `DESCRIPTION:${escapeText(body)}`,
+      'TRANSP:TRANSPARENT',
+      'BEGIN:VALARM',
+      'ACTION:DISPLAY',
+      `DESCRIPTION:${escapeText(title)}`,
+      `TRIGGER:${trigger}`,
+      'END:VALARM',
+      'END:VEVENT',
+    );
+  }
+  lines.push('END:VCALENDAR');
+  return `${lines.flatMap(fold).join('\r\n')}\r\n`;
 };

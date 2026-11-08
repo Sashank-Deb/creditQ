@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { istInstant } from '@creditq/core';
 import type { Bill, Card } from '@creditq/vault';
 import {
+  buildPayDayEvents,
   buildReminderPlan,
   dueToShow,
   mergeOutbox,
@@ -120,5 +121,36 @@ describe('statement dates', () => {
       settings,
     });
     expect(plan[0]?.date).toBe('2026-11-18');
+  });
+});
+
+describe('buildPayDayEvents', () => {
+  it('returns one event per pay day with each card and its due date, ignoring paid bills', () => {
+    const events = buildPayDayEvents({
+      today: '2026-11-20',
+      cards,
+      bills: [...bills, bill('a0', 'a', '2026-11-25', 'paid')],
+      settings,
+    });
+    expect(events).toEqual([
+      {
+        date: '2026-11-27',
+        cards: [
+          { name: 'HDFC Regalia', last4: '4821', dueDate: '2026-12-03' },
+          { name: 'Axis Flipkart', last4: '9033', dueDate: '2026-12-05' },
+        ],
+      },
+    ]);
+  });
+
+  it('is empty when nothing is open', () => {
+    expect(
+      buildPayDayEvents({
+        today: '2026-11-20',
+        cards,
+        bills: [bill('a1', 'a', '2026-12-03', 'paid')],
+        settings,
+      }),
+    ).toEqual([]);
   });
 });

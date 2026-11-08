@@ -1,0 +1,211 @@
+@use '../../styles/tokens' as *;
+@use '../../styles/ui' as *;
+
+.screen {
+  @include screen;
+}
+
+.topBar {
+  height: 48px;
+  display: flex;
+  align-items: center;
+  gap: space(400);
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: space(200);
+  flex: 1;
+}
+
+.title {
+  @include type(heading-m);
+  margin: space(400) 0 space(200);
+}
+
+.lead {
+  @include type(paragraph-m);
+  margin: 0;
+  color: var(--content-secondary);
+
+  strong {
+    color: var(--content-primary);
+  }
+}
+
+.label {
+  @include type(label-s);
+  margin-top: space(300);
+  color: var(--content-secondary);
+}
+
+.input {
+  @include field;
+}
+
+.hint {
+  @include type(paragraph-s);
+  margin: 0;
+  color: var(--content-secondary);
+}
+
+.error {
+  @include type(label-s);
+  margin: 0;
+  color: var(--negative);
+}
+
+.dock {
+  position: static;
+  margin-top: auto;
+  padding: space(400) 0;
+  display: grid;
+  gap: space(200);
+  background: var(--bg-primary);
+}
+
+.btnPrimary {
+  @include button-primary-large;
+}
+
+.btnText {
+  @include button-text;
+}
+
+.doneIcon {
+  @include type(heading-s);
+  width: 48px;
+  height: 48px;
+  margin-top: space(800);
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--bg-positive);
+  color: var(--positive);
+}
+
+.passWrap {
+  position: relative;
+
+  .input {
+    padding-right: 72px;
+  }
+}
+
+.reveal {
+  @include button-text;
+  position: absolute;
+  top: 50%;
+  right: space(200);
+  height: 36px;
+  padding: 0 space(300);
+  transform: translateY(-50%);
+}
+
+.strength {
+  margin-top: space(200);
+  display: grid;
+  gap: space(100);
+
+  p {
+    @include type(paragraph-s);
+    margin: 0;
+    color: var(--content-secondary);
+
+    strong {
+      color: var(--strength, var(--content-primary));
+    }
+  }
+
+  &[data-level='0'],
+  &[data-level='1'] {
+    --strength: var(--negative);
+  }
+
+  &[data-level='2'] {
+    --strength: #c9821f;
+  }
+
+  &[data-level='3'],
+  &[data-level='4'] {
+    --strength: var(--positive);
+  }
+}
+
+.meter {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: space(100);
+
+  span {
+    height: 4px;
+    border-radius: radius(pill);
+    background: var(--bg-tertiary);
+    transition: background-color 250ms ease;
+  }
+
+  .meterOn {
+    background: var(--strength);
+  }
+}
+
+.match {
+  @include type(label-s);
+  margin: space(200) 0 0;
+}
+
+.match {
+  color: var(--positive);
+}
+
+// The real file input is visually hidden (iOS draws it badly); the label is the button.
+.fileInput {
+  @include sr-only;
+}
+
+.filePicker {
+  display: flex;
+  align-items: center;
+  gap: space(300);
+  padding: space(300) space(400);
+  border: 1.5px dashed var(--border-selected);
+  border-radius: radius(default);
+  background: var(--bg-primary);
+  cursor: pointer;
+  @include state-layer;
+}
+
+.fileInput:focus-visible + .filePicker {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+.fileIcon {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--bg-tertiary);
+  color: var(--content-primary);
+}
+
+.fileText {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+
+  strong {
+    @include type(label-m);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  small {
+    @include type(paragraph-s);
+    color: var(--content-secondary);
+  }
+}

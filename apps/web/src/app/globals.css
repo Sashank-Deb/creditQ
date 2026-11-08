@@ -18,3 +18,9 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
 }
+
+/* A open dialog or sheet freezes the page behind it. */
+html:has(dialog[open]),
+body:has(dialog[open]) {
+  overflow: hidden;
+}

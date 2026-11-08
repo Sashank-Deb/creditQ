@@ -1,13 +1,12 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import BackButton from '@/components/BackButton';
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
-import { istInstant, toIcs } from '@creditq/core';
-import { openBackup, sealBackup, type ContentLevel } from '@creditq/vault';
-import { buildReminderPlan } from '@/features/reminders/reminder-plan';
+import { istInstant, toPayDayIcs } from '@creditq/core';
+import type { ContentLevel } from '@creditq/vault';
+import { buildPayDayEvents } from '@/features/reminders/reminder-plan';
 import { notificationsSupported } from '@/features/reminders/ReminderRuntime';
-import { passphraseStrength } from '@/lib/passphrase';
 import { applyTheme, readTheme, saveTheme, THEMES, type Theme } from '@/lib/theme';
 import { getVault, useTodayInIndia, useVaultAction, useVaultData } from '@/lib/vault-client';
 import styles from './SettingsScreen.module.scss';
@@ -44,8 +43,6 @@ export default function SettingsScreen() {
   const [permission, setPermission] = useState<Permission | null>(null);
   const [exported, setExported] = useState(false);
   const confirmRef = useRef<HTMLDialogElement>(null);
-  const exportRef = useRef<HTMLDialogElement>(null);
-  const importRef = useRef<HTMLDialogElement>(null);
   const current = permission ?? initial;
   const [draft, setDraft] = useState<Draft>({});
   const [saved, setSaved] = useState(false);
@@ -54,16 +51,6 @@ export default function SettingsScreen() {
     readTheme,
     () => 'system',
   );
-  const [backupError, setBackupError] = useState<string | null>(null);
-  const [backupNote, setBackupNote] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
-  const router = useRouter();
-  const [pass, setPass] = useState('');
-  const [confirm, setConfirm] = useState('');
-  const [reveal, setReveal] = useState(false);
-  const [importFile, setImportFile] = useState<File | null>(null);
-  const [importPass, setImportPass] = useState('');
-  const [restored, setRestored] = useState(false);
 
   // Preview a theme choice while it is unsaved; leaving the screen puts the saved one back.
   useEffect(() => {
@@ -73,7 +60,7 @@ export default function SettingsScreen() {
 
   if (!data || !today) return <main className={styles.screen} aria-busy="true" />;
   const { settings } = data;
-  const plan = buildReminderPlan({ today, ...data });
+  const payDays = buildPayDayEvents({ today, ...data });
   const leadDays = draft.leadDays ?? settings.leadDays;
   const contentLevel = draft.contentLevel ?? settings.contentLevel;
   const theme = draft.theme ?? savedTheme;
@@ -93,68 +80,6 @@ export default function SettingsScreen() {
     setSaved(true);
   };
 
-  const strength = passphraseStrength(pass);
-
-  const exportBackup = async () => {
-    if (strength.level === 0) {
-      setBackupError('Use a passphrase of at least 8 characters.');
-      return;
-    }
-    if (pass !== confirm) {
-      setBackupError('The two passphrases do not match.');
-      return;
-    }
-    setBusy(true);
-    setBackupError(null);
-    try {
-      const snapshot = await (await getVault()).exportSnapshot();
-      const file = await sealBackup(snapshot, pass);
-      const url = URL.createObjectURL(new Blob([file], { type: 'application/json' }));
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `creditq-backup-${today}.json`;
-      a.click();
-      URL.revokeObjectURL(url);
-      setPass('');
-      setConfirm('');
-      setReveal(false);
-      exportRef.current?.close();
-      setBackupNote(
-        'Backup saved. Keep the passphrase safe: without it the file cannot be opened.',
-      );
-    } catch (e) {
-      setBackupError((e as Error).message);
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const importBackup = async () => {
-    if (!importFile) {
-      setBackupError('Choose a backup file first.');
-      return;
-    }
-    setBusy(true);
-    setBackupError(null);
-    try {
-      const snapshot = await openBackup(await importFile.text(), importPass);
-      await act((v) => v.importSnapshot(snapshot));
-      setImportFile(null);
-      setImportPass('');
-      setRestored(true);
-      setTimeout(() => router.push('/'), 1800);
-    } catch (e) {
-      setBackupError((e as Error).message);
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const openBackupDialog = (ref: React.RefObject<HTMLDialogElement | null>) => {
-    setBackupError(null);
-    ref.current?.showModal();
-  };
-
   const enableNotifications = async () => {
     const result = await Notification.requestPermission();
     setPermission(result);
@@ -168,7 +93,10 @@ export default function SettingsScreen() {
   };
 
   const exportCalendar = () => {
-    const ics = toIcs(plan, { dtstamp: istInstant(today, '00:00') });
+    const ics = toPayDayIcs(payDays, {
+      dtstamp: istInstant(today, '00:00'),
+      time: settings.reminderTime,
+    });
     const url = URL.createObjectURL(new Blob([ics], { type: 'text/calendar;charset=utf-8' }));
     const a = document.createElement('a');
     a.href = url;
@@ -203,8 +131,8 @@ export default function SettingsScreen() {
           <div>
             <p className={styles.rowTitle}>Add to your calendar</p>
             <p className={styles.rowHint}>
-              {plan.length > 0
-                ? `${plan.length} reminders. The most reliable way: your calendar reminds you even if this app is closed. Apple Calendar keeps our alerts; Google Calendar uses your default alert time.`
+              {payDays.length > 0
+                ? `${payDays.length} pay ${payDays.length === 1 ? 'day' : 'days'}. Each is a full-day event listing the cards to pay and their due dates, so your calendar reminds you even if this app is closed. Due dates are not added as events.`
                 : 'Add a card first, then export its reminders.'}
             </p>
             {exported && (
@@ -217,7 +145,7 @@ export default function SettingsScreen() {
             type="button"
             className={styles.btnSecondary}
             onClick={exportCalendar}
-            disabled={plan.length === 0}
+            disabled={payDays.length === 0}
           >
             Export
           </button>
@@ -278,7 +206,8 @@ export default function SettingsScreen() {
               Show card names in reminders
             </label>
             <span id="card-names-hint" className={styles.rowHint}>
-              Off keeps names out of calendars that sync to the cloud. Amounts are never included.
+              Off keeps names out of notifications. The calendar file always lists card names.
+              Amounts are never included.
             </span>
           </div>
           <input
@@ -336,13 +265,9 @@ export default function SettingsScreen() {
               A file with all your cards, bills and payments, locked with a passphrase you choose.
             </p>
           </div>
-          <button
-            type="button"
-            className={styles.btnSecondary}
-            onClick={() => openBackupDialog(exportRef)}
-          >
+          <Link href="/settings/export" className={styles.btnSecondary}>
             Export
-          </button>
+          </Link>
         </div>
         <div className={styles.row}>
           <div>
@@ -351,19 +276,10 @@ export default function SettingsScreen() {
               Restore from a CreditQ backup file. This replaces what is on this device.
             </p>
           </div>
-          <button
-            type="button"
-            className={styles.btnSecondary}
-            onClick={() => openBackupDialog(importRef)}
-          >
+          <Link href="/settings/import" className={styles.btnSecondary}>
             Import
-          </button>
+          </Link>
         </div>
-        {backupNote && (
-          <p className={`${styles.rowOk} ${styles.note}`} role="status">
-            {backupNote}
-          </p>
-        )}
       </section>
 
       <section className={styles.privacy} aria-labelledby="privacy-heading">
@@ -392,198 +308,6 @@ export default function SettingsScreen() {
           {!dirty && saved && 'Saved.'}
         </p>
       </div>
-
-      <dialog ref={exportRef} className={styles.confirm} aria-labelledby="export-title">
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            exportBackup();
-          }}
-        >
-          <h2 id="export-title" className={styles.groupTitle}>
-            Export data
-          </h2>
-          <p className={styles.rowHint}>
-            Your cards, bills and payments go into one file, locked with a passphrase. There is no
-            way to recover the passphrase, so keep it somewhere safe.
-          </p>
-          <label className={styles.fieldLabel} htmlFor="export-pass">
-            Passphrase
-          </label>
-          <div className={styles.passWrap}>
-            <input
-              id="export-pass"
-              type={reveal ? 'text' : 'password'}
-              className={styles.input}
-              autoComplete="new-password"
-              value={pass}
-              onChange={(e) => setPass(e.target.value)}
-              aria-describedby="export-strength"
-              required
-            />
-            <button
-              type="button"
-              className={styles.reveal}
-              aria-pressed={reveal}
-              onClick={() => setReveal((r) => !r)}
-            >
-              {reveal ? 'Hide' : 'Show'}
-            </button>
-          </div>
-          {pass.length > 0 && (
-            <div id="export-strength" className={styles.strength} data-level={strength.level}>
-              <div className={styles.meter} aria-hidden="true">
-                {[1, 2, 3, 4].map((n) => (
-                  <span key={n} className={n <= strength.level ? styles.meterOn : undefined} />
-                ))}
-              </div>
-              <p role="status">
-                <strong>{strength.label}.</strong> {strength.tip}
-              </p>
-            </div>
-          )}
-          <label className={styles.fieldLabel} htmlFor="export-confirm">
-            Repeat passphrase
-          </label>
-          <input
-            id="export-confirm"
-            type={reveal ? 'text' : 'password'}
-            className={styles.input}
-            autoComplete="new-password"
-            value={confirm}
-            onChange={(e) => setConfirm(e.target.value)}
-            required
-          />
-          {confirm.length > 0 && (
-            <p className={pass === confirm ? styles.match : styles.mismatch} role="status">
-              {pass === confirm ? 'Passphrases match.' : 'Passphrases do not match yet.'}
-            </p>
-          )}
-          {backupError && (
-            <p className={styles.error} role="alert">
-              {backupError}
-            </p>
-          )}
-          <div className={styles.confirmActions}>
-            <button type="submit" className={styles.btnPrimary} disabled={busy}>
-              {busy ? 'Encrypting…' : 'Download backup'}
-            </button>
-            <button
-              type="button"
-              className={styles.btnText}
-              onClick={() => exportRef.current?.close()}
-            >
-              Cancel
-            </button>
-          </div>
-        </form>
-      </dialog>
-
-      <dialog
-        ref={importRef}
-        className={styles.confirm}
-        aria-labelledby="import-title"
-        onCancel={(e) => restored && e.preventDefault()}
-      >
-        {restored ? (
-          <div className={styles.success} role="status">
-            <span className={styles.successIcon} aria-hidden="true">
-              ✓
-            </span>
-            <h2 id="import-title" className={styles.groupTitle}>
-              Backup restored
-            </h2>
-            <p className={styles.rowHint}>
-              Your cards, bills and payments are back. Taking you home…
-            </p>
-            <button type="button" className={styles.btnPrimary} onClick={() => router.push('/')}>
-              Go to home
-            </button>
-          </div>
-        ) : (
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              importBackup();
-            }}
-          >
-            <h2 id="import-title" className={styles.groupTitle}>
-              Import data
-            </h2>
-            <p className={styles.rowHint}>
-              This replaces every card, bill and payment on this device with the ones in the file.
-            </p>
-            <span className={styles.fieldLabel} id="import-file-label">
-              Backup file
-            </span>
-            <input
-              id="import-file"
-              type="file"
-              accept="application/json,.json"
-              className={styles.fileInput}
-              aria-labelledby="import-file-label"
-              onChange={(e) => {
-                setImportFile(e.target.files?.[0] ?? null);
-                setBackupError(null);
-              }}
-            />
-            {/* eslint-disable-next-line jsx-a11y/label-has-associated-control -- the text is in nested spans */}
-            <label htmlFor="import-file" className={styles.filePicker}>
-              <span className={styles.fileIcon} aria-hidden="true">
-                <svg
-                  viewBox="0 0 24 24"
-                  width="22"
-                  height="22"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M12 16V4M7 9l5-5 5 5M5 20h14" />
-                </svg>
-              </span>
-              <span className={styles.fileText}>
-                <strong>{importFile ? importFile.name : 'Choose backup file'}</strong>
-                <small>
-                  {importFile
-                    ? `${Math.max(1, Math.round(importFile.size / 1024))} KB · tap to change`
-                    : 'A creditq-backup .json file'}
-                </small>
-              </span>
-            </label>
-            <label className={styles.fieldLabel} htmlFor="import-pass">
-              Passphrase
-            </label>
-            <input
-              id="import-pass"
-              type="password"
-              className={styles.input}
-              autoComplete="off"
-              value={importPass}
-              onChange={(e) => setImportPass(e.target.value)}
-              required
-            />
-            {backupError && (
-              <p className={styles.error} role="alert">
-                {backupError}
-              </p>
-            )}
-            <div className={styles.confirmActions}>
-              <button type="submit" className={styles.btnDanger} disabled={busy}>
-                {busy ? 'Restoring…' : 'Replace my data'}
-              </button>
-              <button
-                type="button"
-                className={styles.btnText}
-                onClick={() => importRef.current?.close()}
-              >
-                Cancel
-              </button>
-            </div>
-          </form>
-        )}
-      </dialog>
 
       <dialog ref={confirmRef} className={styles.confirm} aria-labelledby="confirm-title">
         <h2 id="confirm-title" className={styles.groupTitle}>

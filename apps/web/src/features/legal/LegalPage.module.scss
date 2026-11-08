@@ -1,0 +1,53 @@
+@use '../../styles/tokens' as *;
+@use '../../styles/ui' as *;
+
+.screen {
+  @include screen;
+}
+
+.topBar {
+  height: 48px;
+  display: flex;
+  align-items: center;
+}
+
+.title {
+  @include type(heading-l);
+  margin: 0;
+}
+
+.updated {
+  @include type(paragraph-s);
+  margin: 0;
+  color: var(--content-secondary);
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: space(300);
+
+  h2 {
+    @include type(heading-xs);
+    margin: space(400) 0 0;
+  }
+
+  p,
+  li {
+    @include type(paragraph-m);
+    margin: 0;
+    color: var(--content-secondary);
+  }
+
+  ul {
+    margin: 0;
+    padding-left: space(500);
+    display: flex;
+    flex-direction: column;
+    gap: space(200);
+  }
+
+  strong {
+    color: var(--content-primary);
+  }
+}

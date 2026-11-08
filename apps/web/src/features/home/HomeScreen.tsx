@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { formatClock, formatRupees } from '@creditq/core';
 import Confetti from '@/components/Confetti';
+import MoreMenu from '@/components/MoreMenu';
 import SegmentedControl from '@/components/SegmentedControl';
 import CardTile, { cardTileStyles as tileStyles } from '@/components/CardTile';
 import { useTodayInIndia, useVaultAction, useVaultData } from '@/lib/vault-client';
@@ -128,9 +129,7 @@ export default function HomeScreen() {
         <Link href="/add" className={styles.iconButton} aria-label="Add a card">
           +
         </Link>
-        <Link href="/settings" className={styles.iconButton} aria-label="Settings">
-          ⚙
-        </Link>
+        <MoreMenu />
       </header>
 
       {tab === 'spends' && data && (

@@ -10,6 +10,7 @@ import {
   type CardLabel,
   type CivilDate,
   type Notice,
+  type PayDayEvent,
 } from '@creditq/core';
 import type { Bill, Card, ReminderSettings } from '@creditq/vault';
 
@@ -19,6 +20,39 @@ export interface PlanInput {
   bills: readonly Bill[];
   settings: ReminderSettings;
 }
+
+/** Pay days only, each with the cards to pay and their due dates, for the calendar file. */
+export const buildPayDayEvents = ({ today, cards, bills, settings }: PlanInput): PayDayEvent[] => {
+  const inputs = bills.map((b) => ({
+    id: b.id,
+    cardId: b.cardId,
+    dueDate: b.dueDate,
+    status: b.status,
+    ...(b.statementDate ? { availableFrom: b.statementDate } : {}),
+  }));
+  const { groups } = planPayDays({
+    today,
+    calendar: createCalendar(),
+    bills: inputs,
+    config: { leadDays: settings.leadDays },
+  });
+  const byCard = new Map(cards.map((c) => [c.id, c]));
+  const byBill = new Map(bills.map((b) => [b.id, b]));
+  return groups
+    .filter((g) => g.payDay >= today)
+    .map((g) => ({
+      date: g.payDay,
+      cards: g.billIds.flatMap((id) => {
+        const bill = byBill.get(id);
+        const card = bill && byCard.get(bill.cardId);
+        return bill && bill.status === 'open' && card
+          ? [{ name: card.name, last4: card.last4, dueDate: bill.dueDate }]
+          : [];
+      }),
+    }))
+    .filter((e) => e.cards.length > 0)
+    .sort((a, b) => a.date.localeCompare(b.date));
+};
 
 export const buildReminderPlan = ({ today, cards, bills, settings }: PlanInput): Notice[] => {
   const calendar = createCalendar();
