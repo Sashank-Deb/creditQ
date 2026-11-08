@@ -68,7 +68,9 @@
   outline-offset: 3px;
 }
 
-@each $tone, $n in ('forest': 1, 'terracotta': 2, 'sand': 3, 'olive': 4, 'slate': 5, 'teal': 6) {
+@each $tone,
+  $n in ('forest': 1, 'terracotta': 2, 'sand': 3, 'olive': 4, 'slate': 5, 'burgundy': 6, 'black': 7)
+{
   .swatch-#{$tone} {
     background: linear-gradient(135deg, var(--tile-#{$n}-from), var(--tile-#{$n}-to));
   }

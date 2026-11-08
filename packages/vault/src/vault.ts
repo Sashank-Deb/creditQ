@@ -17,11 +17,19 @@ import {
 } from '@creditq/core';
 import { createAesGcmCodec, generateDeviceKey, type Sealed } from './codec';
 
-export const TILE_TONES = ['forest', 'terracotta', 'sand', 'olive', 'slate', 'teal'] as const;
+export const TILE_TONES = [
+  'forest',
+  'terracotta',
+  'sand',
+  'olive',
+  'slate',
+  'burgundy',
+  'black',
+] as const;
 export type TileTone = (typeof TILE_TONES)[number];
 
 /** Background patterns the user can pick for a card. */
-export const TILE_PATTERNS = ['diamonds', 'lines', 'dots', 'plain'] as const;
+export const TILE_PATTERNS = ['diamonds', 'lines', 'dots', 'grid', 'rings', 'plain'] as const;
 export type TilePattern = (typeof TILE_PATTERNS)[number];
 export const DEFAULT_PATTERN: TilePattern = 'diamonds';
 
@@ -156,8 +164,13 @@ export const openVault = async (options: VaultOptions = {}) => {
     ...(await seal('bills', bill.id, bill)),
   });
 
+  // A colour that no longer exists (deep teal was removed) falls back to the first colour.
+  const knownTone = (tone: string): TileTone =>
+    (TILE_TONES as readonly string[]).includes(tone) ? (tone as TileTone) : TILE_TONES[0];
+
   const listCards = async (): Promise<Card[]> => {
-    const cards = await Promise.all((await db.cards.toArray()).map((r) => read<Card>('cards', r)));
+    const stored = await Promise.all((await db.cards.toArray()).map((r) => read<Card>('cards', r)));
+    const cards = stored.map((c) => ({ ...c, tone: knownTone(c.tone) }));
     return cards.sort((a, b) => a.createdAt - b.createdAt || a.id.localeCompare(b.id));
   };
 
@@ -313,7 +326,7 @@ export const openVault = async (options: VaultOptions = {}) => {
     const keptBank = bank?.ok ? bank.value : old.bank;
     const card: Card = {
       id: old.id,
-      tone: input.tone ?? old.tone,
+      tone: input.tone ?? knownTone(old.tone),
       pattern: input.pattern ?? old.pattern ?? DEFAULT_PATTERN,
       createdAt: old.createdAt,
       ...checked.value,

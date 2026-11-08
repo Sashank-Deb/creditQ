@@ -331,10 +331,10 @@ describe('vault: bank, colour and pattern are their own fields', () => {
       name: 'A',
       last4: '1111',
       dueDate: '2026-11-20',
-      tone: 'teal',
+      tone: 'burgundy',
       pattern: 'dots',
     });
-    expect(chosen.card).toMatchObject({ tone: 'teal', pattern: 'dots' });
+    expect(chosen.card).toMatchObject({ tone: 'burgundy', pattern: 'dots' });
     const auto = await vault.addCard({ name: 'B', last4: '2222', dueDate: '2026-11-21' });
     expect(auto.card).toMatchObject({ tone: 'terracotta', pattern: 'diamonds' });
     vault.close();
@@ -371,5 +371,73 @@ describe('vault: bank, colour and pattern are their own fields', () => {
       pattern: 'lines',
     });
     vault.close();
+  });
+});
+
+describe('vault: card colours and patterns', () => {
+  it('offers burgundy and black, not deep teal, and six patterns', async () => {
+    const { TILE_TONES, TILE_PATTERNS } = await import('../src');
+    expect(TILE_TONES).toContain('burgundy');
+    expect(TILE_TONES).toContain('black');
+    expect(TILE_TONES).not.toContain('teal');
+    expect(TILE_PATTERNS).toEqual(['diamonds', 'lines', 'dots', 'grid', 'rings', 'plain']);
+  });
+
+  it('accepts the new colours and patterns', async () => {
+    const vault = await openVault(fresh());
+    const { card } = await vault.addCard({
+      name: 'A',
+      last4: '1111',
+      dueDate: '2026-11-20',
+      tone: 'black',
+      pattern: 'rings',
+    });
+    expect(card).toMatchObject({ tone: 'black', pattern: 'rings' });
+    vault.close();
+  });
+
+  it('rotates through all seven colours', async () => {
+    const vault = await openVault(fresh());
+    const tones: string[] = [];
+    for (const index of [1, 2, 3, 4, 5, 6, 7, 8]) {
+      // eslint-disable-next-line no-await-in-loop
+      const { card } = await vault.addCard({
+        name: `C${index}`,
+        last4: '1111',
+        dueDate: '2026-11-20',
+      });
+      tones.push(card.tone);
+    }
+    expect(tones).toEqual([
+      'forest',
+      'terracotta',
+      'sand',
+      'olive',
+      'slate',
+      'burgundy',
+      'black',
+      'forest',
+    ]);
+    vault.close();
+  });
+
+  it('shows a card that was saved as deep teal in an existing colour instead of breaking', async () => {
+    const opts = fresh();
+    const first = await openVault(opts);
+    const { card } = await first.addCard({ name: 'Old', last4: '1111', dueDate: '2026-11-20' });
+    // Simulate a card written before deep teal was removed.
+    const row = await first.db.cards.get(card.id);
+    const raw = JSON.stringify({ ...card, tone: 'teal' });
+    const { createAesGcmCodec } = await import('../src');
+    const { db } = first;
+    const key = (await db.meta.get('deviceKey'))!.value as CryptoKey;
+    const sealed = await createAesGcmCodec(key).seal('cards', card.id, 1, JSON.parse(raw));
+    await db.cards.put({ ...row!, ...sealed });
+    first.close();
+
+    const again = await openVault(opts);
+    const [shown] = await again.listCards();
+    expect(shown?.tone).toBe('forest');
+    again.close();
   });
 });

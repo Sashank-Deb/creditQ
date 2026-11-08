@@ -7,13 +7,16 @@ const TONE_NAMES: Record<TileTone, string> = {
   sand: 'Sand',
   olive: 'Olive',
   slate: 'Slate blue',
-  teal: 'Deep teal',
+  burgundy: 'Burgundy',
+  black: 'Black',
 };
 
 const PATTERN_NAMES: Record<TilePattern, string> = {
   diamonds: 'Diamonds',
   lines: 'Lines',
   dots: 'Dots',
+  grid: 'Grid',
+  rings: 'Rings',
   plain: 'Plain',
 };
 

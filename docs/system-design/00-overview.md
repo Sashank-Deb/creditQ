@@ -28,16 +28,16 @@ Default reminder timing: 5 days before the group's earliest due date (1-10, per-
 
 ## 3. Principles (privacy by architecture)
 
-| # | Principle | Consequence in design |
-|---|-----------|-----------------------|
-| P1 | Data never leaves the device unless the user explicitly exports it | No API endpoint accepts user data. API is GET-only. |
-| P2 | The server is incapable of learning, not merely promising | Stateless handlers, no DB, no logging of IP/UA beyond what the CDN does by default; no cookies; no request bodies. |
-| P3 | Encrypted at rest on device | Vault envelope (AES-GCM) with passphrase/passkey-derived key (`01`). |
-| P4 | Remote data is untrusted until signed | Catalog JSON is signed (Ed25519) at build time; client verifies with pinned keys. Remote content is data only, never code. |
-| P5 | Pure domain core | `packages/core` has no DOM, no IO, no clock; deterministic, property-testable. |
-| P6 | Minimal third-party surface | No analytics, no CDN scripts, no fonts from third parties; Google only on explicit opt-in (Gmail, Drive) on isolated routes. |
-| P7 | Fail safe on money-timing | When uncertain (holiday, lag, missing bill) choose the earlier payment day and say why. |
-| P8 | Honest limits | We document what a PWA cannot do (iOS background, push) rather than faking it. |
+| #   | Principle                                                          | Consequence in design                                                                                                        |
+| --- | ------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------- |
+| P1  | Data never leaves the device unless the user explicitly exports it | No API endpoint accepts user data. API is GET-only.                                                                          |
+| P2  | The server is incapable of learning, not merely promising          | Stateless handlers, no DB, no logging of IP/UA beyond what the CDN does by default; no cookies; no request bodies.           |
+| P3  | Encrypted at rest on device                                        | Vault envelope (AES-GCM) with passphrase/passkey-derived key (`01`).                                                         |
+| P4  | Remote data is untrusted until signed                              | Catalog JSON is signed (Ed25519) at build time; client verifies with pinned keys. Remote content is data only, never code.   |
+| P5  | Pure domain core                                                   | `packages/core` has no DOM, no IO, no clock; deterministic, property-testable.                                               |
+| P6  | Minimal third-party surface                                        | No analytics, no CDN scripts, no fonts from third parties; Google only on explicit opt-in (Gmail, Drive) on isolated routes. |
+| P7  | Fail safe on money-timing                                          | When uncertain (holiday, lag, missing bill) choose the earlier payment day and say why.                                      |
+| P8  | Honest limits                                                      | We document what a PWA cannot do (iOS background, push) rather than faking it.                                               |
 
 ## 4. C4 Level 1: System context
 
@@ -92,26 +92,27 @@ Trust boundary rule: arrows leaving the "device" boundary carry only (a) anonymo
 
 ## 6. Tech stack and hosting
 
-| Concern | Choice | Why | Free-tier note |
-|---------|--------|-----|----------------|
-| Framework | Next.js (App Router), TypeScript strict | Mandated | `output: 'export'` for web app (fully static; no server runtime needed) |
-| PWA | Hand-written SW + `manifest.webmanifest` (Serwist as fallback option) | App Router SSG + minimal SW we fully control (notification logic must be exact) | n/a |
-| UI | shadcn/ui + Tailwind (ASSUMPTION; UI-lib-agnostic: all screens depend on `packages/ui-contracts` view-model hooks, not components) | Copy-in components, no runtime dep, a11y via Radix | n/a |
-| Local DB | Dexie 4 over IndexedDB | Typed, migrations, liveQuery | n/a |
-| Crypto | WebCrypto (AES-GCM, PBKDF2/HKDF, WebAuthn PRF optional); `@noble/ed25519` fallback for signature verification | No JS crypto in the hot path; native | n/a |
-| PDF | `pdfjs-dist` in a dedicated Worker | Mandated | n/a |
-| Validation | zod (catalog, import files, parser output) | One schema source for TS types + runtime checks | n/a |
-| State | Zustand + Dexie `liveQuery` | Small, no server cache | n/a |
-| API | Next.js route handlers, `dynamic = 'force-static'`, GET only | Mandated, effectively static JSON | See hosting |
-| Hosting | **Vercel Hobby** (manager decision): web app and API as two Vercel projects from the same repo | Native Next.js support, preview deploys per PR, headers (CSP/cache) via `vercel.json` / `next.config` `headers()`. **Licence caveat**: Hobby is for personal, non-commercial use under Vercel's terms; see migration path below and `06` | $0 on `*.vercel.app`; custom domain optional (not counted) |
-| Lint | ESLint 9 flat config + **`eslint-config-airbnb-extended`** + `typescript-eslint` + `eslint-config-prettier`; Prettier run separately | See section 8 | n/a |
-| Tests | Vitest, fast-check, Playwright, axe, Lighthouse CI | `06` | GitHub Actions free |
-| Monorepo | pnpm workspaces + Turborepo (local cache only) | Fast, free | No remote cache |
-| Release signing | Ed25519 private key in GitHub Actions encrypted secret; signs catalog at build | No signing runtime on the server | n/a |
+| Concern         | Choice                                                                                                                               | Why                                                                                                                                                                                                                                      | Free-tier note                                                          |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| Framework       | Next.js (App Router), TypeScript strict                                                                                              | Mandated                                                                                                                                                                                                                                 | `output: 'export'` for web app (fully static; no server runtime needed) |
+| PWA             | Hand-written SW + `manifest.webmanifest` (Serwist as fallback option)                                                                | App Router SSG + minimal SW we fully control (notification logic must be exact)                                                                                                                                                          | n/a                                                                     |
+| UI              | shadcn/ui + Tailwind (ASSUMPTION; UI-lib-agnostic: all screens depend on `packages/ui-contracts` view-model hooks, not components)   | Copy-in components, no runtime dep, a11y via Radix                                                                                                                                                                                       | n/a                                                                     |
+| Local DB        | Dexie 4 over IndexedDB                                                                                                               | Typed, migrations, liveQuery                                                                                                                                                                                                             | n/a                                                                     |
+| Crypto          | WebCrypto (AES-GCM, PBKDF2/HKDF, WebAuthn PRF optional); `@noble/ed25519` fallback for signature verification                        | No JS crypto in the hot path; native                                                                                                                                                                                                     | n/a                                                                     |
+| PDF             | `pdfjs-dist` in a dedicated Worker                                                                                                   | Mandated                                                                                                                                                                                                                                 | n/a                                                                     |
+| Validation      | zod (catalog, import files, parser output)                                                                                           | One schema source for TS types + runtime checks                                                                                                                                                                                          | n/a                                                                     |
+| State           | Zustand + Dexie `liveQuery`                                                                                                          | Small, no server cache                                                                                                                                                                                                                   | n/a                                                                     |
+| API             | Next.js route handlers, `dynamic = 'force-static'`, GET only                                                                         | Mandated, effectively static JSON                                                                                                                                                                                                        | See hosting                                                             |
+| Hosting         | **Vercel Hobby** (manager decision): web app and API as two Vercel projects from the same repo                                       | Native Next.js support, preview deploys per PR, headers (CSP/cache) via `vercel.json` / `next.config` `headers()`. **Licence caveat**: Hobby is for personal, non-commercial use under Vercel's terms; see migration path below and `06` | $0 on `*.vercel.app`; custom domain optional (not counted)              |
+| Lint            | ESLint 9 flat config + **`eslint-config-airbnb-extended`** + `typescript-eslint` + `eslint-config-prettier`; Prettier run separately | See section 8                                                                                                                                                                                                                            | n/a                                                                     |
+| Tests           | Vitest, fast-check, Playwright, axe, Lighthouse CI                                                                                   | `06`                                                                                                                                                                                                                                     | GitHub Actions free                                                     |
+| Monorepo        | pnpm workspaces + Turborepo (local cache only)                                                                                       | Fast, free                                                                                                                                                                                                                               | No remote cache                                                         |
+| Release signing | Ed25519 private key in GitHub Actions encrypted secret; signs catalog at build                                                       | No signing runtime on the server                                                                                                                                                                                                         | n/a                                                                     |
 
 Why two Vercel projects (web + api) rather than one Next app? The API has no access to, and no knowledge of, any user code path; the web app contains no server code. Privacy claims become auditable per project (web: zero route handlers; api: zero client code), the web app's CSP `connect-src` names exactly one API origin, and the API can be redeployed (catalog refresh) without shipping a new app version. The cost is one extra Vercel project (still $0). They can be collapsed later without contract changes.
 
 ### 6.1 Hosting migration path (if ever monetised)
+
 Vercel Hobby may not be used for commercial purposes (ads, paid tiers, donations-as-revenue are all grey/red areas; ASSUMPTION: re-read Vercel's terms at launch). Because the web app is a pure static export and the API is `force-static` GET JSON, migration is mechanical: (1) **Cloudflare Pages** (free, static, `_headers` file replaces `vercel.json` headers; API as a static JSON build or via the OpenNext adapter), or Netlify/GitHub Pages for the web app; (2) or upgrade to Vercel Pro (paid, breaks the $0 rule). Keep hosting-specific config isolated in two files (`vercel.json` and a generated `_headers` produced by the same script) so a switch is a DNS change. Open question Q6 asks the manager to confirm the monetisation intent.
 
 ## 7. Repo structure
@@ -144,7 +145,8 @@ creditq/                   # repo name: creditq (pnpm workspace; packages are @c
 ```
 
 Dependency rules (enforced by `eslint-plugin-import` boundaries or `dependency-cruiser` in CI):
-- `core` imports nothing from other packages except `catalog` *types*.
+
+- `core` imports nothing from other packages except `catalog` _types_.
 - `vault` imports `core` types only. `apps/web` may import everything. `apps/api` imports `catalog` only.
 - Nothing in `core` may reference `window`, `document`, `indexedDB`, `Date.now()`, `Intl` locale-dependent APIs (lint rule: `no-restricted-globals`/`no-restricted-properties`).
 
@@ -157,15 +159,16 @@ Dependency rules (enforced by `eslint-plugin-import` boundaries or `dependency-c
 
 ## 9. Document map
 
-| File | Content |
-|------|---------|
-| `01-data-model.md` | Local schema, encryption, migrations |
-| `02-api-contracts.md` | Stateless API + core module interfaces + threat model of the server |
-| `03-grouping-algorithm.md` | Grouped payment day |
-| `04-reminder-and-notification-design.md` | .ics, notifications, limits |
-| `05-security-and-privacy.md` | CSP, Gmail, DPDP |
-| `06-testing-ci-cost.md` | Tests, CI, cost proof |
-| `07-roadmap.md` | M0-M4, open questions |
+| File                                     | Content                                                             |
+| ---------------------------------------- | ------------------------------------------------------------------- |
+| `01-data-model.md`                       | Local schema, encryption, migrations                                |
+| `02-api-contracts.md`                    | Stateless API + core module interfaces + threat model of the server |
+| `03-grouping-algorithm.md`               | Grouped payment day                                                 |
+| `04-reminder-and-notification-design.md` | .ics, notifications, limits                                         |
+| `05-security-and-privacy.md`             | CSP, Gmail, DPDP                                                    |
+| `06-testing-ci-cost.md`                  | Tests, CI, cost proof                                               |
+| `07-roadmap.md`                          | M0-M4, open questions                                               |
 
 ## 10. Package naming
+
 npm scope `@creditq/*`: `@creditq/core`, `@creditq/catalog`, `@creditq/vault`, `@creditq/ui-contracts`, `@creditq/testkit`, `@creditq/config`; apps `@creditq/web`, `@creditq/api`. Repo: `creditq`. Catalog/ICS UID domain: `creditq.invalid` until a real domain exists.

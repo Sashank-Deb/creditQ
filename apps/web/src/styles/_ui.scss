@@ -73,7 +73,18 @@
 // Card tile surface: a colour (tone) plus a pattern, both user-chosen.
 // Tone classes set variables; pattern classes decide how the gradient is dressed.
 @mixin tile-themes {
-  @each $tone, $n in ('forest': 1, 'terracotta': 2, 'sand': 3, 'olive': 4, 'slate': 5, 'teal': 6) {
+  @each $tone,
+    $n
+      in (
+        'forest': 1,
+        'terracotta': 2,
+        'sand': 3,
+        'olive': 4,
+        'slate': 5,
+        'burgundy': 6,
+        'black': 7
+      )
+  {
     .tone-#{$tone} {
       --l: var(--tile-#{$n}-line);
       --from: var(--tile-#{$n}-from);
@@ -100,6 +111,20 @@
   .pattern-dots {
     background:
       radial-gradient(circle, var(--l) 1.5px, transparent 2px) 0 0 / 14px 14px,
+      linear-gradient(135deg, var(--from), var(--to));
+  }
+
+  .pattern-grid {
+    background:
+      repeating-linear-gradient(0deg, var(--l) 0 1px, transparent 1px 16px),
+      repeating-linear-gradient(90deg, var(--l) 0 1px, transparent 1px 16px),
+      linear-gradient(135deg, var(--from), var(--to));
+  }
+
+  // Concentric rings spreading from the top right corner.
+  .pattern-rings {
+    background:
+      repeating-radial-gradient(circle at 100% 0%, transparent 0 15px, var(--l) 15px 16px),
       linear-gradient(135deg, var(--from), var(--to));
   }
 

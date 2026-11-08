@@ -74,14 +74,22 @@ html:root {
   --tile-5-btnfg: #1f3a2f;
   --tile-5-tag: rgba(0, 0, 0, 0.28);
   --tile-5-tagfg: #ffffff;
-  --tile-6-from: #0d4343;
-  --tile-6-to: #175c5c;
+  --tile-6-from: #4a1020;
+  --tile-6-to: #7a2236;
   --tile-6-ink: #ffffff;
   --tile-6-line: rgba(255, 255, 255, 0.08);
   --tile-6-btn: #ffffff;
-  --tile-6-btnfg: #1f3a2f;
+  --tile-6-btnfg: #4a1020;
   --tile-6-tag: rgba(0, 0, 0, 0.28);
   --tile-6-tagfg: #ffffff;
+  --tile-7-from: #121212;
+  --tile-7-to: #2e2e30;
+  --tile-7-ink: #ffffff;
+  --tile-7-line: rgba(255, 255, 255, 0.08);
+  --tile-7-btn: #ffffff;
+  --tile-7-btnfg: #121212;
+  --tile-7-tag: rgba(255, 255, 255, 0.16);
+  --tile-7-tagfg: #ffffff;
   color-scheme: light;
 }
 @media (prefers-color-scheme: dark) {
@@ -161,14 +169,22 @@ html:root {
     --tile-5-btnfg: #1f3a2f;
     --tile-5-tag: rgba(0, 0, 0, 0.28);
     --tile-5-tagfg: #ffffff;
-    --tile-6-from: #0d4343;
-    --tile-6-to: #175c5c;
+    --tile-6-from: #4a1020;
+    --tile-6-to: #7a2236;
     --tile-6-ink: #ffffff;
     --tile-6-line: rgba(255, 255, 255, 0.08);
     --tile-6-btn: #ffffff;
-    --tile-6-btnfg: #1f3a2f;
+    --tile-6-btnfg: #4a1020;
     --tile-6-tag: rgba(0, 0, 0, 0.28);
     --tile-6-tagfg: #ffffff;
+    --tile-7-from: #121212;
+    --tile-7-to: #2e2e30;
+    --tile-7-ink: #ffffff;
+    --tile-7-line: rgba(255, 255, 255, 0.08);
+    --tile-7-btn: #ffffff;
+    --tile-7-btnfg: #121212;
+    --tile-7-tag: rgba(255, 255, 255, 0.16);
+    --tile-7-tagfg: #ffffff;
     color-scheme: dark;
   }
 }

@@ -41,8 +41,8 @@ describe('add-card flow (3 steps, one question each)', () => {
   });
 
   it('lets the user choose a colour and a pattern, or leave both automatic', () => {
-    const s = run({ type: 'setTone', tone: 'teal' }, { type: 'setPattern', pattern: 'dots' });
-    expect(s).toMatchObject({ tone: 'teal', pattern: 'dots' });
+    const s = run({ type: 'setTone', tone: 'burgundy' }, { type: 'setPattern', pattern: 'rings' });
+    expect(s).toMatchObject({ tone: 'burgundy', pattern: 'rings' });
   });
 
   it('blocks step 1 until bank, name and digits are valid, with inline errors', () => {
