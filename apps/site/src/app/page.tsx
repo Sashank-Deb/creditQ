@@ -1,4 +1,7 @@
-import { APP_URL, REPO_URL } from '../site-config';
+import Link from 'next/link';
+import JsonLd from '../blog/JsonLd';
+import { POSTS } from '../blog/posts';
+import { APP_URL, REPO_URL, SITE_NAME, SITE_URL } from '../site-config';
 import Playground from './Playground';
 import styles from './site.module.scss';
 
@@ -90,11 +93,49 @@ const FAQ = [
 export default function Page() {
   return (
     <>
+      <JsonLd
+        data={{
+          '@context': 'https://schema.org',
+          '@graph': [
+            {
+              '@type': 'WebApplication',
+              name: SITE_NAME,
+              url: APP_URL,
+              description:
+                'Credit card bill reminders with a single pay day for all your cards. Works offline; data stays on your device.',
+              applicationCategory: 'FinanceApplication',
+              operatingSystem: 'Any (web, installable)',
+              browserRequirements: 'Requires a modern browser',
+              inLanguage: 'en-IN',
+              offers: { '@type': 'Offer', price: '0', priceCurrency: 'INR' },
+              image: `${SITE_URL}/icon-512.png`,
+            },
+            {
+              '@type': 'Organization',
+              name: SITE_NAME,
+              url: SITE_URL,
+              logo: `${SITE_URL}/icon-512.png`,
+              sameAs: [REPO_URL],
+            },
+            {
+              '@type': 'WebSite',
+              name: SITE_NAME,
+              url: SITE_URL,
+            },
+            {
+              '@type': 'FAQPage',
+              mainEntity: FAQ.map((f) => ({
+                '@type': 'Question',
+                name: f.q,
+                acceptedAnswer: { '@type': 'Answer', text: f.a },
+              })),
+            },
+          ],
+        }}
+      />
       <header className={styles.nav}>
         <a href="#top" className={styles.brand}>
-          <span className={styles.logo} aria-hidden="true">
-            Q
-          </span>
+          <span className={styles.logo} aria-hidden="true" />
           CreditQ
         </a>
         <nav aria-label="Sections" className={styles.links}>
@@ -103,6 +144,7 @@ export default function Page() {
           <a href="#playground">Try it</a>
           <a href="#offline">Offline</a>
           <a href="#faq">FAQ</a>
+          <Link href="/blog">Blog</Link>
         </nav>
         <a href={APP_URL} className={styles.btnPrimarySmall}>
           Open app
@@ -306,6 +348,21 @@ export default function Page() {
           </div>
         </section>
 
+        <section className={styles.section} aria-labelledby="guides">
+          <h2 id="guides">Credit card guides</h2>
+          <p className={styles.sub}>Short reads on due dates, billing cycles and paying on time.</p>
+          <ul className={styles.grid}>
+            {POSTS.map((p) => (
+              <li key={p.slug} className={styles.card}>
+                <h3>
+                  <Link href={`/blog/${p.slug}`}>{p.title}</Link>
+                </h3>
+                <p>{p.excerpt}</p>
+              </li>
+            ))}
+          </ul>
+        </section>
+
         <section className={styles.final}>
           <h2>Add your first card in under a minute</h2>
           <a href={APP_URL} className={styles.btnPrimary}>
@@ -318,8 +375,8 @@ export default function Page() {
       <footer className={styles.footer}>
         <p>© 2026 CreditQ. Made in India. Not affiliated with any bank.</p>
         <p>
-          <a href={`${APP_URL}/privacy`}>Privacy</a> · <a href={`${APP_URL}/terms`}>Terms</a> ·{' '}
-          <a href={REPO_URL}>GitHub</a>
+          <Link href="/blog">Blog</Link> · <a href={`${APP_URL}/privacy`}>Privacy</a> ·{' '}
+          <a href={`${APP_URL}/terms`}>Terms</a> · <a href={REPO_URL}>GitHub</a>
         </p>
       </footer>
     </>

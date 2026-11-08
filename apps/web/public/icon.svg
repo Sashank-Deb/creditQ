@@ -1,1 +1,25 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" rx="112" fill="#1F3A2F"/><rect x="96" y="152" width="320" height="208" rx="32" fill="#B0532D"/><rect x="128" y="200" width="64" height="48" rx="10" fill="#E8DBBF"/><rect x="128" y="296" width="168" height="24" rx="12" fill="#F4F7F1"/><circle cx="380" cy="132" r="44" fill="#F4F7F1"/><path d="M362 132l12 12 24-26" stroke="#1F3A2F" stroke-width="12" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="90 90 844 844"><defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1B3A30"/>
+      <stop offset="1" stop-color="#153329"/>
+    </linearGradient>
+    <linearGradient id="card" x1="0" y1="0" x2="0.9" y2="1">
+      <stop offset="0" stop-color="#B6532E"/>
+      <stop offset="1" stop-color="#A94425"/>
+    </linearGradient>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="170%">
+      <feDropShadow dx="0" dy="18" stdDeviation="18" flood-color="#000000" flood-opacity=".22"/>
+    </filter>
+  </defs>
+  <!-- App tile -->
+  <rect x="90" y="90" width="844" height="844" rx="220" fill="url(#bg)" stroke="#315246" stroke-width="10"/>
+  <!-- Credit card -->
+  <g filter="url(#shadow)">
+    <rect x="235" y="325" width="554" height="365" rx="58" fill="url(#card)" stroke="#D17A4D" stroke-width="8"/>
+    <rect x="290" y="398" width="112" height="76" rx="18" fill="#F1E2C2"/>
+    <rect x="290" y="570" width="275" height="38" rx="19" fill="#F5E9D4"/>
+  </g>
+  <!-- Verified badge -->
+  <circle cx="730" cy="286" r="82" fill="#F7F7F1" stroke="#D9E3DC" stroke-width="8"/>
+  <path d="M690 286 L718 315 L772 254" fill="none" stroke="#183C30" stroke-width="25" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

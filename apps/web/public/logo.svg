@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <title>CreditQ logo</title>
+  <desc>Rounded deep-green app icon with a terracotta credit card and a verified check badge.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1B3A30"/>
+      <stop offset="1" stop-color="#153329"/>
+    </linearGradient>
+    <linearGradient id="card" x1="0" y1="0" x2="0.9" y2="1">
+      <stop offset="0" stop-color="#B6532E"/>
+      <stop offset="1" stop-color="#A94425"/>
+    </linearGradient>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="170%">
+      <feDropShadow dx="0" dy="18" stdDeviation="18" flood-color="#000000" flood-opacity=".22"/>
+    </filter>
+  </defs>
+  <!-- App tile -->
+  <rect x="90" y="90" width="844" height="844" rx="220" fill="url(#bg)" stroke="#315246" stroke-width="10"/>
+  <!-- Credit card -->
+  <g filter="url(#shadow)">
+    <rect x="235" y="325" width="554" height="365" rx="58" fill="url(#card)" stroke="#D17A4D" stroke-width="8"/>
+    <rect x="290" y="398" width="112" height="76" rx="18" fill="#F1E2C2"/>
+    <rect x="290" y="570" width="275" height="38" rx="19" fill="#F5E9D4"/>
+  </g>
+  <!-- Verified badge -->
+  <circle cx="730" cy="286" r="82" fill="#F7F7F1" stroke="#D9E3DC" stroke-width="8"/>
+  <path d="M690 286 L718 315 L772 254" fill="none" stroke="#183C30" stroke-width="25" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

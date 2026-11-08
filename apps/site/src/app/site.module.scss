@@ -90,14 +90,10 @@ $wrap: 1080px;
 }
 
 .logo {
-  display: grid;
-  place-items: center;
-  width: 32px;
-  height: 32px;
-  border-radius: 10px;
-  background: var(--bg-inverse-primary);
-  color: var(--content-inverse-primary);
-  font-size: 1.05rem;
+  display: block;
+  width: 34px;
+  height: 34px;
+  background: url('/icon.svg') center / contain no-repeat;
 }
 
 .links {
@@ -654,4 +650,147 @@ $wrap: 1080px;
   a {
     color: var(--content-primary);
   }
+}
+
+// ---- blog ----
+.article {
+  @include wrap;
+  max-width: 760px;
+  padding-top: 40px;
+  padding-bottom: 80px;
+
+  h1 {
+    @include display;
+    margin: 8px 0 12px;
+    font-size: clamp(1.9rem, 5vw, 2.8rem);
+    line-height: 1.12;
+  }
+}
+
+.crumbs {
+  font-size: 0.85rem;
+  color: var(--content-secondary);
+
+  a {
+    color: var(--content-secondary);
+  }
+}
+
+.meta {
+  margin: 0 0 28px;
+  color: var(--content-secondary);
+  font-size: 0.9rem;
+}
+
+.prose {
+  font-size: 1.05rem;
+
+  h2 {
+    @include display;
+    margin: 40px 0 12px;
+    font-size: 1.55rem;
+    line-height: 1.2;
+  }
+
+  p,
+  li {
+    color: var(--content-primary);
+  }
+
+  p {
+    margin: 0 0 16px;
+  }
+
+  ul,
+  ol {
+    margin: 0 0 20px;
+    padding-left: 22px;
+    display: grid;
+    gap: 8px;
+  }
+
+  a {
+    color: var(--content-primary);
+    text-decoration-color: var(--cal-pay);
+    text-underline-offset: 3px;
+  }
+}
+
+.callout {
+  margin: 24px 0;
+  padding: 18px 20px;
+  border-radius: 14px;
+  border-left: 6px solid var(--cal-pay);
+  background: var(--bg-secondary);
+
+  p {
+    margin: 6px 0 0;
+  }
+}
+
+.qa {
+  margin: 0 0 10px;
+  padding: 14px 18px;
+  border: 1px solid var(--border-opaque);
+  border-radius: 12px;
+  background: var(--bg-secondary);
+
+  summary {
+    cursor: pointer;
+    font-weight: 600;
+  }
+
+  p {
+    margin: 10px 0 0;
+    color: var(--content-secondary);
+  }
+}
+
+.ctaBox {
+  margin: 48px 0;
+  padding: 28px;
+  border-radius: 20px;
+  background: var(--bg-positive);
+  border: 1px solid var(--border-opaque);
+  text-align: center;
+
+  h2 {
+    @include display;
+    margin: 0 0 8px;
+  }
+
+  p {
+    margin: 0 0 18px;
+    color: var(--content-secondary);
+  }
+}
+
+.posts {
+  display: grid;
+  gap: 16px;
+  margin: 24px 0 0;
+  padding: 0;
+  list-style: none;
+
+  h2,
+  h3 {
+    margin: 0 0 8px;
+    font-size: 1.2rem;
+    line-height: 1.25;
+  }
+
+  a {
+    color: var(--content-primary);
+  }
+
+  p {
+    margin: 0 0 6px;
+    color: var(--content-secondary);
+  }
+}
+
+.moreTitle {
+  @include display;
+  margin: 0;
+  font-size: 1.4rem;
 }
