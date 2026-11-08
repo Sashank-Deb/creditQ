@@ -7,7 +7,6 @@ import { TILE_TONES, type TileTone } from '@creditq/vault';
 import BackButton from '@/components/BackButton';
 import CardTile from '@/components/CardTile';
 import TileStylePicker from '@/components/TileStylePicker';
-import { useKeyboardInset } from '@/lib/keyboard';
 import { useTodayInIndia, useVaultAction, useVaultData } from '@/lib/vault-client';
 import {
   addCardReducer,
@@ -31,7 +30,6 @@ function Flow({ today, onAgain }: { today: string; onAgain: () => void }) {
   const [savedName, setSavedName] = useState<string | null>(null);
   const { data } = useVaultData();
   const act = useVaultAction();
-  useKeyboardInset();
 
   const banks = listBanks();
   const nextTone: TileTone = TILE_TONES[(data?.cards.length ?? 0) % TILE_TONES.length] ?? 'forest';
@@ -182,11 +180,14 @@ function Flow({ today, onAgain }: { today: string; onAgain: () => void }) {
               placeholder="Premier, Flipkart, Regalia..."
               autoComplete="off"
               autoCorrect="off"
-              autoCapitalize="words"
+              autoCapitalize="off"
               spellCheck={false}
               enterKeyHint="next"
+              inputMode="text"
+              aria-autocomplete="none"
               data-1p-ignore
               data-lpignore="true"
+              data-bwignore="true"
               data-form-type="other"
               aria-invalid={Boolean(state.errors.name)}
               aria-describedby="card-nickname-hint card-nickname-error"
@@ -280,7 +281,7 @@ function Flow({ today, onAgain }: { today: string; onAgain: () => void }) {
             <FieldError id="card-due-error" message={state.errors.dueDate} />
           </>
         )}
-        <div className={`${styles.dock} ${styles.dockFixed}`}>
+        <div className={`${styles.dock} ${styles.dockStatic}`}>
           <button type="submit" className={styles.btnPrimary} disabled={state.step === 'saving'}>
             {state.step === 1 || state.step === 2 ? 'Next' : 'Save card'}
           </button>

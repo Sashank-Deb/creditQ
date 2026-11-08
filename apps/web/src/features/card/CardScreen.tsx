@@ -173,7 +173,13 @@ function Editor({
         {field(
           'name',
           'Card name',
-          { autoComplete: 'off', autoCorrect: 'off', spellCheck: false, 'data-1p-ignore': true },
+          {
+            autoComplete: 'off',
+            autoCorrect: 'off',
+            autoCapitalize: 'off',
+            spellCheck: false,
+            'data-1p-ignore': true,
+          },
           'The name of the card, not the bank.',
         )}
         {field(
