@@ -96,11 +96,11 @@ out(
     kicker: 'Credit card bill reminders',
     lines: ['Your cards, your phone,', 'nobody else.'],
     sub: 'Offline, encrypted, no account.',
-    host: 'credit-q.vercel.app',
+    host: 'credit-q.vercel.app/app',
   }),
 );
 
-const SITE_HOST = 'creditq.vercel.app';
+const SITE_HOST = 'credit-q.vercel.app';
 out(
   SITE,
   'og.png',

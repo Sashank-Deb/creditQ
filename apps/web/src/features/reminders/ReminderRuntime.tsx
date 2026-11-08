@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import { BASE_PATH, withBase } from '@/lib/base-path';
 import { claimNotice, readOutbox, replaceOutbox } from '@/lib/outbox';
 import { todayInIndia } from '@/lib/today';
 import { useTodayInIndia, useVaultData } from '@/lib/vault-client';
@@ -10,7 +11,7 @@ const TICK_MS = 60_000;
 
 /** Pages the service worker keeps for offline use. */
 const OFFLINE_PAGES = [
-  '/',
+  '',
   '/add',
   '/card',
   '/settings',
@@ -18,7 +19,7 @@ const OFFLINE_PAGES = [
   '/settings/import',
   '/privacy',
   '/terms',
-];
+].map(withBase);
 
 export const notificationsSupported = (): boolean =>
   typeof window !== 'undefined' && 'Notification' in window && 'serviceWorker' in navigator;
@@ -37,7 +38,7 @@ export default function ReminderRuntime() {
     if (!('serviceWorker' in navigator)) return;
     // Also caches the app's own files so it opens offline (see public/sw.js).
     navigator.serviceWorker
-      .register('/sw.js')
+      .register(withBase('/sw.js'), { scope: BASE_PATH })
       .then(() => navigator.serviceWorker.ready)
       .then((reg) => reg.active?.postMessage({ type: 'warm', urls: OFFLINE_PAGES }))
       .catch(() => undefined);
@@ -65,8 +66,8 @@ export default function ReminderRuntime() {
             await reg.showNotification(r.title, {
               body: r.body,
               tag: r.tag,
-              icon: '/icon.svg',
-              data: { url: '/' },
+              icon: withBase('/icon.svg'),
+              data: { url: BASE_PATH },
             });
           }
         }),

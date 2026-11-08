@@ -12,6 +12,7 @@
     "format:check": "prettier --check .",
     "typecheck": "pnpm -r typecheck",
     "test": "pnpm -r test",
+    "build:all": "pnpm --filter @creditq/site build && pnpm --filter @creditq/web build && node scripts/merge-sites.mjs",
     "check": "pnpm lint && pnpm format:check && pnpm typecheck && pnpm test"
   },
   "devDependencies": {

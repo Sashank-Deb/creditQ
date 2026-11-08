@@ -7,6 +7,7 @@ import { istInstant, toPayDayIcs } from '@creditq/core';
 import type { ContentLevel } from '@creditq/vault';
 import { buildPayDayEvents } from '@/features/reminders/reminder-plan';
 import { notificationsSupported } from '@/features/reminders/ReminderRuntime';
+import { withBase } from '@/lib/base-path';
 import { applyTheme, readTheme, saveTheme, THEMES, type Theme } from '@/lib/theme';
 import { getVault, useTodayInIndia, useVaultAction, useVaultData } from '@/lib/vault-client';
 import styles from './SettingsScreen.module.scss';
@@ -111,8 +112,7 @@ export default function SettingsScreen() {
     await (await getVault()).deleteEverything();
     indexedDB.deleteDatabase('creditq-outbox');
     // A full reload, not client navigation: it drops the in-memory vault handle and keys too.
-    // eslint-disable-next-line @next/next/no-location-assign-relative-destination
-    window.location.assign('/');
+    window.location.assign(withBase('/'));
   };
 
   return (
