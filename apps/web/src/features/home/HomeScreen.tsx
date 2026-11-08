@@ -8,7 +8,7 @@ import { useTodayInIndia, useVaultAction, useVaultData } from '@/lib/vault-clien
 import SpendsView from '@/features/spends/SpendsView';
 import { currentBills } from './current-bills';
 import MiniCalendar from './MiniCalendar';
-import PaidDeck from './PaidDeck';
+import CardDeck from './CardDeck';
 import ReminderTimeline from './ReminderTimeline';
 import { buildHomeView } from './home-view';
 import styles from './HomeScreen.module.scss';
@@ -165,7 +165,7 @@ export default function HomeScreen() {
                   focus={t.isFocus}
                   editHref={`/card?id=${encodeURIComponent(t.cardId)}`}
                   actions={
-                    t.isFocus && !t.billPending ? (
+                    t.isFocus ? (
                       <button
                         type="button"
                         className={tileStyles.btnOnTile}
@@ -185,7 +185,10 @@ export default function HomeScreen() {
               </li>
             ))}
           </ol>
-          <PaidDeck cards={view.deck} />
+          {view.tiles.length === 0 && <p className={styles.quiet}>Nothing to pay this week.</p>}
+          <CardDeck title="Recently added" cards={view.decks.recent} />
+          <CardDeck title="Paid this cycle" cards={view.decks.paid} />
+          <CardDeck title="Bill generated" cards={view.decks.generated} />
         </>
       )}
 

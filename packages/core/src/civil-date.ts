@@ -76,3 +76,6 @@ export const maxDate = (a: CivilDate, b: CivilDate): CivilDate => (a >= b ? a : 
 
 /** Day of month 1..31, used for the RBI 2nd/4th Saturday rule. */
 export const dayOfMonth = (d: CivilDate): number => parts(d)[2];
+
+/** The Sunday that ends the Monday-to-Sunday week `d` falls in (`d` itself if it is a Sunday). */
+export const endOfWeek = (d: CivilDate): CivilDate => addDays(d, (7 - dayOfWeek(d)) % 7);

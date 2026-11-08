@@ -262,3 +262,9 @@
   padding: 0 space(300);
   border-radius: radius(nested);
 }
+
+.quiet {
+  @include type(paragraph-m);
+  margin: 0;
+  color: var(--content-secondary);
+}

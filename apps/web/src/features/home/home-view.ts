@@ -7,6 +7,7 @@ import {
   compareDates,
   createCalendar,
   detectIssuer,
+  endOfWeek,
   formatCountdown,
   formatShortDate,
   planPayDays,
@@ -44,11 +45,13 @@ export interface HomeTile {
   issuer: Issuer;
   dueLabel: string;
   pill: string;
+  /** Every card listed individually is actionable: it has its own payment button. */
   isFocus: boolean;
-  /** The bill is not generated yet (its statement date is still ahead): nothing to pay. */
-  billPending: boolean;
 }
 
+export type DeckKind = 'recent' | 'paid' | 'generated';
+
+/** A card in one of the three decks: only a strip shows until it is brought to the front. */
 export interface DeckCard {
   cardId: string;
   name: string;
@@ -56,7 +59,20 @@ export interface DeckCard {
   tone: TileTone;
   pattern: TilePattern;
   issuer: Issuer;
-  label: string;
+  kind: DeckKind;
+  /** The headline when the card is open, e.g. "Paid" or "Pay day Tue, 3 Mar". */
+  status: string;
+  /** A second line, e.g. "Due Sun, 8 Mar". */
+  note: string;
+}
+
+export interface HomeDecks {
+  /** Added, and the bill is not generated yet. */
+  recent: DeckCard[];
+  /** Paid, waiting for the next bill. */
+  paid: DeckCard[];
+  /** The bill is generated, but the pay day is after this week. */
+  generated: DeckCard[];
 }
 
 export interface CalendarView {
@@ -80,7 +96,7 @@ export interface HomeView {
   dueSoonCount: number;
   banner: string;
   tiles: HomeTile[];
-  deck: DeckCard[];
+  decks: HomeDecks;
   calendar: CalendarView;
 }
 
@@ -145,7 +161,7 @@ export const buildHomeView = (input: HomeInput): HomeView => {
       dueSoonCount: 0,
       banner: '',
       tiles: [],
-      deck: [],
+      decks: { recent: [], paid: [], generated: [] },
       calendar: calendarFor(today.slice(0, 7), today, [], []),
     };
   }
@@ -181,42 +197,6 @@ export const buildHomeView = (input: HomeInput): HomeView => {
   const unpaid = byDue.filter((c) => !paid.has(c.id));
   const focusGroup = plan.groups[0];
 
-  const tiles = unpaid.map((c, i): HomeTile => {
-    const group = groupOf.get(c.id);
-    const billPending = c.statementDate !== undefined && compareDates(c.statementDate, today) > 0;
-    let pill = '';
-    if (billPending && c.statementDate) pill = `Bill generates ${formatShortDate(c.statementDate)}`;
-    else if (group && i === 0) pill = `Pay day ${formatCountdown(today, group.payDay)}`;
-    else if (group && group === focusGroup) pill = 'Same pay day';
-    else if (group) pill = `Pay day ${formatShortDate(group.payDay)}`;
-    return {
-      cardId: c.id,
-      name: c.name,
-      last4: c.last4,
-      tone: c.tone,
-      pattern: c.pattern ?? 'diamonds',
-      issuer: detectIssuer(c.bank ?? c.name),
-      dueLabel: `Due ${formatShortDate(c.dueDate)}`,
-      pill: capitalise(pill),
-      isFocus: i === 0,
-      billPending,
-    };
-  });
-
-  const deck = byDue
-    .filter((c) => paid.has(c.id))
-    .map((c): DeckCard => ({
-      cardId: c.id,
-      name: c.name,
-      last4: c.last4,
-      tone: c.tone,
-      pattern: c.pattern ?? 'diamonds',
-      issuer: detectIssuer(c.bank ?? c.name),
-      label: c.nextStatementDate
-        ? `Paid · next bill ${formatShortDate(c.nextStatementDate)}`
-        : 'Paid',
-    }));
-
   // Was the pay day missed? Plan again as if from long ago, so the day is not pushed to today.
   // Any such group that still has unpaid cards had its pay day pass without being paid.
   const ideal = planPayDays({
@@ -228,6 +208,86 @@ export const buildHomeView = (input: HomeInput): HomeView => {
   const missedGroups = ideal.groups.filter((g) => compareDates(g.payDay, today) < 0);
   const missedCount = missedGroups.reduce((n, g) => n + g.billIds.length, 0);
   const missedDay = missedGroups[0]?.payDay;
+
+  // Which cards are actionable this week? The calendar week runs Monday to Sunday. A card is
+  // listed on its own when its bill exists and its pay day is on or before this Sunday; a
+  // missed pay day is already pulled forward to today, so it stays listed and payable.
+  const weekEnd = endOfWeek(today);
+  const isPending = (c: CardRecord) =>
+    c.statementDate !== undefined && compareDates(c.statementDate, today) > 0;
+  const payDayOf = (c: CardRecord) => groupOf.get(c.id)?.payDay;
+  const inThisWeek = (c: CardRecord) => {
+    const day = payDayOf(c);
+    return day !== undefined && compareDates(day, weekEnd) <= 0;
+  };
+  const missedIds = new Set(missedGroups.flatMap((g) => g.billIds));
+  // A missed pay day is always actionable, even if the catch-up day is next Monday.
+  const isIndividual = (c: CardRecord) => !isPending(c) && (inThisWeek(c) || missedIds.has(c.id));
+  const individual = unpaid.filter(isIndividual);
+
+  const seenGroups = new Set<string>();
+  const tiles = individual.map((c): HomeTile => {
+    const group = groupOf.get(c.id);
+    let pill = '';
+    if (group) {
+      pill = seenGroups.has(group.key)
+        ? 'Same pay day'
+        : `Pay day ${formatCountdown(today, group.payDay)}`;
+      seenGroups.add(group.key);
+    }
+    return {
+      cardId: c.id,
+      name: c.name,
+      last4: c.last4,
+      tone: c.tone,
+      pattern: c.pattern ?? 'diamonds',
+      issuer: detectIssuer(c.bank ?? c.name),
+      dueLabel: `Due ${formatShortDate(c.dueDate)}`,
+      pill: capitalise(pill),
+      isFocus: true,
+    };
+  });
+
+  const deckCard = (c: CardRecord, kind: DeckKind, status: string, note: string): DeckCard => ({
+    cardId: c.id,
+    name: c.name,
+    last4: c.last4,
+    tone: c.tone,
+    pattern: c.pattern ?? 'diamonds',
+    issuer: detectIssuer(c.bank ?? c.name),
+    kind,
+    status,
+    note,
+  });
+  const payDayLabel = (c: CardRecord) => {
+    const day = payDayOf(c);
+    return day ? `Pay day ${formatShortDate(day)}` : '';
+  };
+  const decks: HomeDecks = {
+    recent: unpaid
+      .filter(isPending)
+      .map((c) =>
+        deckCard(
+          c,
+          'recent',
+          `Bill generates ${formatShortDate(c.statementDate ?? c.dueDate)}`,
+          [payDayLabel(c), `Due ${formatShortDate(c.dueDate)}`].filter(Boolean).join(' · '),
+        ),
+      ),
+    paid: byDue
+      .filter((c) => paid.has(c.id))
+      .map((c) =>
+        deckCard(
+          c,
+          'paid',
+          'Paid',
+          c.nextStatementDate ? `Next bill ${formatShortDate(c.nextStatementDate)}` : '',
+        ),
+      ),
+    generated: unpaid
+      .filter((c) => !isPending(c) && !isIndividual(c))
+      .map((c) => deckCard(c, 'generated', payDayLabel(c), `Due ${formatShortDate(c.dueDate)}`)),
+  };
 
   const events = planReminders({
     today,
@@ -269,10 +329,10 @@ export const buildHomeView = (input: HomeInput): HomeView => {
   return {
     isEmpty: false,
     timeline,
-    dueSoonCount: unpaid.length,
+    dueSoonCount: tiles.length,
     banner,
     tiles,
-    deck,
+    decks,
     calendar: calendarFor(
       month,
       today,

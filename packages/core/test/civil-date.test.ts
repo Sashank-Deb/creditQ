@@ -54,3 +54,19 @@ describe('civil dates', () => {
     );
   });
 });
+
+describe('endOfWeek (calendar week, Monday to Sunday)', () => {
+  it('returns the Sunday that ends the week, including when the day is already Sunday', async () => {
+    const { endOfWeek } = await import('../src');
+    expect(endOfWeek('2026-11-02')).toBe('2026-11-08'); // Monday
+    expect(endOfWeek('2026-11-05')).toBe('2026-11-08'); // Thursday
+    expect(endOfWeek('2026-11-08')).toBe('2026-11-08'); // Sunday
+    expect(endOfWeek('2026-11-09')).toBe('2026-11-15'); // next Monday starts a new week
+  });
+
+  it('crosses month and year ends', async () => {
+    const { endOfWeek } = await import('../src');
+    expect(endOfWeek('2026-12-30')).toBe('2027-01-03');
+    expect(endOfWeek('2026-02-26')).toBe('2026-03-01');
+  });
+});
