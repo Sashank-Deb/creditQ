@@ -115,3 +115,19 @@ describe('vault export and import', () => {
     target.close();
   });
 });
+
+describe('editing a card colour', () => {
+  it('persists a new tone and pattern', async () => {
+    const v = await openVault(fresh());
+    const { card } = await v.addCard({ name: 'A', last4: '1234', dueDate: '2026-12-08' });
+    await v.updateCard(card.id, {
+      name: 'A',
+      last4: '1234',
+      dueDate: '2026-12-08',
+      tone: 'burgundy',
+      pattern: 'rings',
+    });
+    expect((await v.listCards())[0]).toMatchObject({ tone: 'burgundy', pattern: 'rings' });
+    v.close();
+  });
+});

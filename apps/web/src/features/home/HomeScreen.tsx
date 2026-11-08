@@ -3,6 +3,8 @@
 import Link from 'next/link';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { formatClock, formatRupees } from '@creditq/core';
+import Confetti from '@/components/Confetti';
+import SegmentedControl from '@/components/SegmentedControl';
 import CardTile, { cardTileStyles as tileStyles } from '@/components/CardTile';
 import { useTodayInIndia, useVaultAction, useVaultData } from '@/lib/vault-client';
 import SpendsView from '@/features/spends/SpendsView';
@@ -28,6 +30,7 @@ export default function HomeScreen() {
   const [sheetFor, setSheetFor] = useState<string | null>(null);
   const [amount, setAmount] = useState('');
   const [snack, setSnack] = useState<Snack | null>(null);
+  const [celebrate, setCelebrate] = useState(0);
   const dialogRef = useRef<HTMLDialogElement>(null);
 
   useEffect(() => {
@@ -36,6 +39,12 @@ export default function HomeScreen() {
     if (sheetFor && !d.open) d.showModal();
     if (!sheetFor && d.open) d.close();
   }, [sheetFor]);
+
+  useEffect(() => {
+    if (celebrate === 0) return undefined;
+    const c = setTimeout(() => setCelebrate(0), 1800);
+    return () => clearTimeout(c);
+  }, [celebrate]);
 
   useEffect(() => {
     if (!snack) return undefined;
@@ -85,6 +94,7 @@ export default function HomeScreen() {
     );
     const logged = amountPaise ? ` · ${formatRupees(amountPaise)} logged` : '';
     setSnack({ text: `Marked paid${logged}`, undoPaymentId: payment.id });
+    setCelebrate((n) => n + 1);
   };
 
   const undo = async () => {
@@ -96,27 +106,25 @@ export default function HomeScreen() {
   return (
     <main className={styles.screen}>
       <header className={styles.topBar}>
-        <div className={styles.segment} role="tablist" aria-label="View">
-          <button
-            type="button"
-            role="tab"
-            aria-selected={tab === 'due'}
-            className={tab === 'due' ? styles.segOn : styles.segOff}
-            onClick={() => setTab('due')}
-          >
-            Due soon
-            {view.dueSoonCount > 0 && <span className={styles.badge}>{view.dueSoonCount}</span>}
-          </button>
-          <button
-            type="button"
-            role="tab"
-            aria-selected={tab === 'spends'}
-            className={tab === 'spends' ? styles.segOn : styles.segOff}
-            onClick={() => setTab('spends')}
-          >
-            Spends
-          </button>
-        </div>
+        <SegmentedControl
+          label="View"
+          value={tab}
+          onChange={setTab}
+          options={[
+            {
+              value: 'due',
+              label: (
+                <>
+                  Due soon
+                  {view.dueSoonCount > 0 && (
+                    <span className={styles.badge}>{view.dueSoonCount}</span>
+                  )}
+                </>
+              ),
+            },
+            { value: 'spends', label: 'Spends' },
+          ]}
+        />
         <Link href="/add" className={styles.iconButton} aria-label="Add a card">
           +
         </Link>
@@ -236,6 +244,8 @@ export default function HomeScreen() {
           </div>
         </form>
       </dialog>
+
+      {celebrate > 0 && <Confetti key={celebrate} />}
 
       {snack && (
         <div className={styles.snack} role="status">

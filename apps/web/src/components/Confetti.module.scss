@@ -1,0 +1,44 @@
+.layer {
+  position: fixed;
+  left: 50%;
+  bottom: 96px;
+  width: 0;
+  height: 0;
+  z-index: 50;
+  pointer-events: none;
+
+  @media (prefers-reduced-motion: reduce) {
+    display: none;
+  }
+}
+
+.piece {
+  position: absolute;
+  width: 8px;
+  height: 12px;
+  border-radius: 2px;
+  background: var(--c);
+  opacity: 0;
+  animation: burst 1.4s cubic-bezier(0.2, 0.7, 0.3, 1) forwards;
+}
+
+.round {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+}
+
+@keyframes burst {
+  0% {
+    opacity: 1;
+    transform: translate(0, 0) rotate(0);
+  }
+  55% {
+    opacity: 1;
+    transform: translate(var(--dx), calc(var(--rise) * -1)) rotate(var(--spin));
+  }
+  100% {
+    opacity: 0;
+    transform: translate(calc(var(--dx) * 1.2), 60px) rotate(calc(var(--spin) * 1.4));
+  }
+}

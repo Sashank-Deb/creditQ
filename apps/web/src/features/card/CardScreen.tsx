@@ -43,13 +43,11 @@ function Editor({
     statementDate: bill?.statementDate ?? '',
   });
   const [errors, setErrors] = useState<Errors>({});
-  const [saved, setSaved] = useState(false);
 
   const set = (field: keyof CardForm, value: string) => {
     const clean = field === 'last4' ? value.replace(/\D/g, '').slice(0, 4) : value;
     setForm((f) => ({ ...f, [field]: clean }));
     setErrors(({ [field]: dropped, ...rest }) => rest);
-    setSaved(false);
   };
 
   const save = async () => {
@@ -62,7 +60,7 @@ function Editor({
       const { statementDate, ...rest } = r.value;
       const input = { ...rest, tone, pattern };
       await act((v) => v.updateCard(card.id, statementDate ? { ...input, statementDate } : input));
-      setSaved(true);
+      router.push('/');
     } catch (e) {
       setErrors({ dueDate: (e as Error).message });
     }
@@ -209,20 +207,13 @@ function Editor({
             autoTone={card.tone}
             onTone={(t) => {
               setTone(t ?? card.tone);
-              setSaved(false);
             }}
             onPattern={(p) => {
               setPattern(p);
-              setSaved(false);
             }}
           />
         </div>
         <div className={styles.dock}>
-          {saved && (
-            <p className={styles.saved} role="status">
-              Saved
-            </p>
-          )}
           <button type="submit" className={styles.btnPrimary}>
             Save changes
           </button>

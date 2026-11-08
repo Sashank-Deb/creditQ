@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react';
 import { aggregateSpend, formatRupees } from '@creditq/core';
 import type { Card, Payment } from '@creditq/vault';
+import SegmentedControl from '@/components/SegmentedControl';
 import styles from './SpendsView.module.scss';
 
 const FULL_MONTHS: Record<string, string> = {
@@ -18,6 +19,17 @@ const FULL_MONTHS: Record<string, string> = {
   Oct: 'October',
   Nov: 'November',
   Dec: 'December',
+};
+
+// A card's bar is the flat base colour of its tile (the start of the tile's gradient).
+const TONE_NUMBER: Record<string, number> = {
+  forest: 1,
+  terracotta: 2,
+  sand: 3,
+  olive: 4,
+  slate: 5,
+  burgundy: 6,
+  black: 7,
 };
 
 interface SpendsViewProps {
@@ -76,26 +88,15 @@ export default function SpendsView({ today, cards, payments }: SpendsViewProps) 
         </p>
       </div>
 
-      <div className={styles.segment} role="tablist" aria-label="Split">
-        <button
-          type="button"
-          role="tab"
-          aria-selected={split === 'all'}
-          className={split === 'all' ? styles.segOn : styles.segOff}
-          onClick={() => setSplit('all')}
-        >
-          All cards
-        </button>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={split === 'each'}
-          className={split === 'each' ? styles.segOn : styles.segOff}
-          onClick={() => setSplit('each')}
-        >
-          Each card
-        </button>
-      </div>
+      <SegmentedControl
+        label="Split"
+        value={split}
+        onChange={setSplit}
+        options={[
+          { value: 'all', label: 'All cards' },
+          { value: 'each', label: 'Each card' },
+        ]}
+      />
 
       {split === 'all' ? (
         <figure className={styles.chart} aria-label="Paid per month, last 6 months">
@@ -136,8 +137,10 @@ export default function SpendsView({ today, cards, payments }: SpendsViewProps) 
               <span className={styles.cardAmount}>{formatRupees(paise)}</span>
               <span className={styles.track} aria-hidden="true">
                 <span
-                  className={styles[`bar-${card.tone}`]}
-                  style={{ width: `${(paise / cardMax) * 100}%` }}
+                  style={{
+                    width: `${(paise / cardMax) * 100}%`,
+                    background: `var(--tile-${TONE_NUMBER[card.tone] ?? 1}-from)`,
+                  }}
                 />
               </span>
             </li>

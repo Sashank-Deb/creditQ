@@ -46,40 +46,6 @@
   align-items: center;
 }
 
-.segment {
-  display: flex;
-  flex: 1;
-  padding: space(100);
-  gap: space(100);
-  border-radius: radius(pill);
-  background: var(--bg-tertiary);
-}
-
-.segOn,
-.segOff {
-  @include state-layer;
-  @include type(label-s);
-  flex: 1;
-  height: 36px;
-  border: 0;
-  border-radius: radius(pill);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: space(200);
-}
-
-.segOn {
-  background: var(--bg-secondary);
-  color: var(--content-primary);
-  @include elevation(100);
-}
-
-.segOff {
-  background: transparent;
-  color: var(--content-secondary);
-}
-
 .badge {
   @include type(label-xs);
   min-width: 20px;
