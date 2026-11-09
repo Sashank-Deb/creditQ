@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 import { aggregateSpend, formatRupees } from '@creditq/core';
 import type { Card, Payment } from '@creditq/vault';
 import SegmentedControl from '@/components/SegmentedControl';
+import TransactionList from '@/features/transactions/TransactionList';
 import { groupSpendByBank } from './group-by-bank';
 import styles from './SpendsView.module.scss';
 
@@ -66,6 +67,7 @@ export default function SpendsView({ today, cards, payments }: SpendsViewProps) 
           {summary.skippedCount > 0 &&
             ` ${summary.skippedCount} ${summary.skippedCount === 1 ? 'payment was' : 'payments were'} marked paid without an amount.`}
         </p>
+        <TransactionList cards={cards} payments={payments} />
       </section>
     );
   }
@@ -103,32 +105,35 @@ export default function SpendsView({ today, cards, payments }: SpendsViewProps) 
       />
 
       {split === 'all' ? (
-        <figure className={styles.chart} aria-label="Paid per month, last 6 months">
-          <div className={styles.plot}>
-            {summary.months.map((m) => (
-              <button
-                key={m.key}
-                type="button"
-                className={`${styles.col} ${m.key === selected.key ? styles.colOn : ''}`}
-                aria-pressed={m.key === selected.key}
-                aria-label={`${FULL_MONTHS[m.label] ?? m.label}: ${formatRupees(m.totalPaise)}`}
-                onClick={() => setSelectedKey(m.key)}
-              >
-                <span className={styles.tip} aria-hidden="true">
-                  {formatRupees(m.totalPaise)}
-                </span>
-                <span
-                  className={styles.bar}
-                  style={{
-                    height: m.totalPaise > 0 ? `${Math.max(2, (m.totalPaise / max) * 100)}%` : 0,
-                  }}
-                />
-                <span className={styles.label}>{m.label}</span>
-              </button>
-            ))}
-          </div>
-          <figcaption className={styles.note}>Tap a month to see it above.</figcaption>
-        </figure>
+        <>
+          <figure className={styles.chart} aria-label="Paid per month, last 6 months">
+            <div className={styles.plot}>
+              {summary.months.map((m) => (
+                <button
+                  key={m.key}
+                  type="button"
+                  className={`${styles.col} ${m.key === selected.key ? styles.colOn : ''}`}
+                  aria-pressed={m.key === selected.key}
+                  aria-label={`${FULL_MONTHS[m.label] ?? m.label}: ${formatRupees(m.totalPaise)}`}
+                  onClick={() => setSelectedKey(m.key)}
+                >
+                  <span className={styles.tip} aria-hidden="true">
+                    {formatRupees(m.totalPaise)}
+                  </span>
+                  <span
+                    className={styles.bar}
+                    style={{
+                      height: m.totalPaise > 0 ? `${Math.max(2, (m.totalPaise / max) * 100)}%` : 0,
+                    }}
+                  />
+                  <span className={styles.label}>{m.label}</span>
+                </button>
+              ))}
+            </div>
+            <figcaption className={styles.note}>Tap a month to see it above.</figcaption>
+          </figure>
+          <TransactionList cards={cards} payments={payments} />
+        </>
       ) : (
         <>
           <div className={styles.filters}>

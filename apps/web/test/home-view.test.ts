@@ -22,12 +22,30 @@ describe('pay day this week: cards listed individually, each with its own paymen
     expect(view.decks).toEqual({ recent: [], paid: [], generated: [] });
   });
 
-  it('shows the club pay day once, then "Same pay day" for the rest of the group', () => {
-    expect(view.tiles.map((t) => t.pill)).toEqual([
-      'Pay day tomorrow',
-      'Same pay day',
-      'Same pay day',
-    ]);
+  it('shows the shared pay day once, after the last card of the group', () => {
+    expect(view.tiles.map((t) => t.pill)).toEqual(['', '', 'Pay day tomorrow']);
+  });
+
+  it('puts one pay day mark at the end of each group when pay days differ', () => {
+    const two = buildHomeView({
+      today: '2026-03-02',
+      cards: [
+        { id: 'a', name: 'A', last4: '1111', dueDate: '2026-03-08', tone: 'forest' },
+        { id: 'b', name: 'B', last4: '2222', dueDate: '2026-03-09', tone: 'forest' },
+        { id: 'c', name: 'C', last4: '3333', dueDate: '2026-03-20', tone: 'forest' },
+      ],
+      paidCardIds: [],
+      leadDays: 7,
+    });
+    const marks = two.tiles.map((t) => [t.cardId, t.pill]);
+    // Every group ends with exactly one mark and no other card carries one.
+    expect(marks.filter(([, pill]) => pill !== '')).toHaveLength(
+      new Set(two.tiles.map((t) => t.groupKey)).size,
+    );
+    const last = new Map(two.tiles.map((t, i) => [t.groupKey, i]));
+    two.tiles.forEach((t, i) => {
+      expect(t.pill !== '').toBe(last.get(t.groupKey) === i);
+    });
   });
 
   it('marks every individual card as actionable', () => {
@@ -86,10 +104,10 @@ describe('pay day after this week: the "Bill generated" deck', () => {
   it('is clubbed no earlier than the Settings lead days before the earliest due date', () => {
     // Lead 3 days: due Sun 8 Mar minus 3 is Thu 5 Mar, so on Mon 2 Mar it is still this week.
     const view = buildHomeView({ today: MONDAY, cards, paidCardIds: [], leadDays: 3 });
-    expect(view.tiles[0]?.pill).toBe('Pay day in 3 days');
+    expect(view.tiles.at(-1)?.pill).toBe('Pay day in 3 days');
     // Lead 10 days: the ideal pay day is already behind us, so it is a catch-up today.
     const early = buildHomeView({ today: MONDAY, cards, paidCardIds: [], leadDays: 10 });
-    expect(early.tiles[0]?.pill).toBe('Pay day today');
+    expect(early.tiles.at(-1)?.pill).toBe('Pay day today');
   });
 });
 

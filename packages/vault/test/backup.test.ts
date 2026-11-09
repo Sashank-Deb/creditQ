@@ -131,3 +131,25 @@ describe('editing a card colour', () => {
     v.close();
   });
 });
+
+describe('reverting a payment', () => {
+  it('reopens the bill and removes the payment when it is the latest one', async () => {
+    const v = await openVault(fresh());
+    const { bill } = await v.addCard({ name: 'A', last4: '1234', dueDate: '2026-12-08' });
+    const { payment } = await v.markPaid(bill.id, { amountPaise: 5000, paidOn: '2026-12-01' });
+    await v.undoPayment(payment.id);
+    expect(await v.listPayments()).toEqual([]);
+    expect((await v.listBills()).map((b) => b.status)).toEqual(['open']);
+    v.close();
+  });
+
+  it('refuses to revert an older payment while a later one exists', async () => {
+    const v = await openVault(fresh());
+    const { bill } = await v.addCard({ name: 'A', last4: '1234', dueDate: '2026-12-08' });
+    const first = await v.markPaid(bill.id, { amountPaise: 5000, paidOn: '2026-12-01' });
+    await v.markPaid(first.nextBill.id, { amountPaise: 6000, paidOn: '2027-01-02' });
+    await expect(v.undoPayment(first.payment.id)).rejects.toThrow(/later payment/i);
+    expect(await v.listPayments()).toHaveLength(2);
+    v.close();
+  });
+});

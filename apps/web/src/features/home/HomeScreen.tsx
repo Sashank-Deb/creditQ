@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { formatClock, formatRupees } from '@creditq/core';
+import { haptic } from '@/lib/haptics';
 import Confetti from '@/components/Confetti';
 import MoreMenu from '@/components/MoreMenu';
 import SegmentedControl from '@/components/SegmentedControl';
@@ -96,6 +97,7 @@ export default function HomeScreen() {
     const logged = amountPaise ? ` · ${formatRupees(amountPaise)} logged` : '';
     setSnack({ text: `Marked paid${logged}`, undoPaymentId: payment.id });
     setCelebrate((n) => n + 1);
+    haptic('success');
   };
 
   const undo = async () => {
@@ -108,6 +110,7 @@ export default function HomeScreen() {
     <main className={styles.screen}>
       <header className={styles.topBar}>
         <SegmentedControl
+          className={styles.tabs}
           label="View"
           value={tab}
           onChange={setTab}
@@ -201,12 +204,42 @@ export default function HomeScreen() {
 
       <p className={styles.privacy}>Stays on this phone. No account, no cloud copy.</p>
 
+      {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-noninteractive-element-interactions -- tapping the dimmed backdrop is a pointer shortcut; keyboard users have Escape and the Close button */}
       <dialog
         ref={dialogRef}
         className={styles.sheet}
         aria-labelledby="paid-title"
-        onClose={() => setSheetFor(null)}
+        onClose={() => {
+          setSheetFor(null);
+          setAmount('');
+        }}
+        onClick={(e) => {
+          // A tap on the dimmed area outside the sheet closes it without marking anything paid.
+          const box = e.currentTarget.getBoundingClientRect();
+          const outside =
+            e.clientX < box.left ||
+            e.clientX > box.right ||
+            e.clientY < box.top ||
+            e.clientY > box.bottom;
+          if (outside) setSheetFor(null);
+        }}
       >
+        <button
+          type="button"
+          className={styles.sheetClose}
+          aria-label="Close without marking as paid"
+          onClick={() => setSheetFor(null)}
+        >
+          <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+            <path
+              d="M6 6l12 12M18 6L6 18"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.25"
+              strokeLinecap="round"
+            />
+          </svg>
+        </button>
         <form
           method="dialog"
           onSubmit={(e) => {

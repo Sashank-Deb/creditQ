@@ -6,7 +6,9 @@ import { detectIssuer, formatShortDate, listBanks } from '@creditq/core';
 import type { Bill, Card, Payment, TilePattern, TileTone } from '@creditq/vault';
 import BackButton from '@/components/BackButton';
 import CardTile from '@/components/CardTile';
+import SegmentedControl from '@/components/SegmentedControl';
 import TileStylePicker from '@/components/TileStylePicker';
+import CardTransactions from '@/features/transactions/CardTransactions';
 import { useTodayInIndia, useVaultAction, useVaultData } from '@/lib/vault-client';
 import { removalWarning, validateCardForm, type CardForm } from './card-form';
 import styles from './CardScreen.module.scss';
@@ -43,6 +45,7 @@ function Editor({
     statementDate: bill?.statementDate ?? '',
   });
   const [errors, setErrors] = useState<Errors>({});
+  const [tab, setTab] = useState<'details' | 'transactions'>('details');
 
   const set = (field: keyof CardForm, value: string) => {
     const clean = field === 'last4' ? value.replace(/\D/g, '').slice(0, 4) : value;
@@ -113,126 +116,142 @@ function Editor({
         dueLabel={form.dueDate ? `Due ${formatShortDate(form.dueDate)}` : 'Due date'}
       />
 
-      <form
-        className={styles.form}
-        noValidate
-        onSubmit={(e) => {
-          e.preventDefault();
-          save();
-        }}
-      >
-        <h1 className={styles.title}>Edit card</h1>
-        <div className={styles.field}>
-          <label className={styles.label} htmlFor="edit-bank">
-            Bank
-          </label>
-          <select
-            id="edit-bank"
-            className={styles.input}
-            value={otherBank ? 'Other' : form.bank}
-            aria-invalid={Boolean(errors.bank)}
-            aria-describedby="edit-bank-msg"
-            onChange={(e) => {
-              if (e.target.value === 'Other') {
-                setOtherBank(true);
-                set('bank', '');
-              } else {
-                setOtherBank(false);
-                set('bank', e.target.value);
-              }
-            }}
-          >
-            <option value="" disabled>
-              Choose your bank
-            </option>
-            {banks.map((b) => (
-              <option key={b} value={b}>
-                {b}
-              </option>
-            ))}
-            <option value="Other">Other</option>
-          </select>
-          {otherBank && (
-            <input
+      <SegmentedControl
+        label="Card"
+        value={tab}
+        onChange={setTab}
+        options={[
+          { value: 'details', label: 'Details' },
+          { value: 'transactions', label: 'All transactions' },
+        ]}
+      />
+
+      {tab === 'transactions' && <CardTransactions card={card} payments={payments} today={today} />}
+
+      {tab === 'details' && (
+        <form
+          className={styles.form}
+          noValidate
+          onSubmit={(e) => {
+            e.preventDefault();
+            save();
+          }}
+        >
+          <h1 className={styles.title}>Edit card</h1>
+          <div className={styles.field}>
+            <label className={styles.label} htmlFor="edit-bank">
+              Bank
+            </label>
+            <select
+              id="edit-bank"
               className={styles.input}
-              value={form.bank}
-              placeholder="Bank name"
-              autoComplete="off"
-              aria-label="Bank name"
+              value={otherBank ? 'Other' : form.bank}
               aria-invalid={Boolean(errors.bank)}
               aria-describedby="edit-bank-msg"
-              onChange={(e) => set('bank', e.target.value)}
-            />
+              onChange={(e) => {
+                if (e.target.value === 'Other') {
+                  setOtherBank(true);
+                  set('bank', '');
+                } else {
+                  setOtherBank(false);
+                  set('bank', e.target.value);
+                }
+              }}
+            >
+              <option value="" disabled>
+                Choose your bank
+              </option>
+              {banks.map((b) => (
+                <option key={b} value={b}>
+                  {b}
+                </option>
+              ))}
+              <option value="Other">Other</option>
+            </select>
+            {otherBank && (
+              <input
+                className={styles.input}
+                value={form.bank}
+                placeholder="Bank name"
+                autoComplete="off"
+                aria-label="Bank name"
+                aria-invalid={Boolean(errors.bank)}
+                aria-describedby="edit-bank-msg"
+                onChange={(e) => set('bank', e.target.value)}
+              />
+            )}
+            <p id="edit-bank-msg" className={errors.bank ? styles.error : styles.hint}>
+              {errors.bank}
+            </p>
+          </div>
+          {field(
+            'name',
+            'Card name',
+            {
+              autoComplete: 'off',
+              autoCorrect: 'off',
+              autoCapitalize: 'off',
+              spellCheck: false,
+              'data-1p-ignore': true,
+            },
+            'The name of the card, not the bank.',
           )}
-          <p id="edit-bank-msg" className={errors.bank ? styles.error : styles.hint}>
-            {errors.bank}
-          </p>
-        </div>
-        {field(
-          'name',
-          'Card name',
-          {
-            autoComplete: 'off',
-            autoCorrect: 'off',
-            autoCapitalize: 'off',
-            spellCheck: false,
-            'data-1p-ignore': true,
-          },
-          'The name of the card, not the bank.',
-        )}
-        {field(
-          'last4',
-          'Last 4 digits',
-          { inputMode: 'numeric', autoComplete: 'off' },
-          'Only the last 4. We never ask for your full card number.',
-        )}
-        {field(
-          'statementDate',
-          'Statement date',
-          { type: 'date', placeholder: 'Select statement date', max: form.dueDate || undefined },
-          'When the bill is generated. The card comes back as due from this date each month.',
-        )}
-        {field(
-          'dueDate',
-          bill?.status === 'paid' ? 'Next due date' : 'Due date',
-          { type: 'date', placeholder: 'Select due date', min: today },
-          'Repeats every month on this day.',
-        )}
-        <div className={styles.field}>
-          <p className={styles.label}>Card look</p>
-          <TileStylePicker
-            name="edit"
-            tone={tone}
-            pattern={pattern}
-            autoTone={card.tone}
-            onTone={(t) => {
-              setTone(t ?? card.tone);
-            }}
-            onPattern={(p) => {
-              setPattern(p);
-            }}
-          />
-        </div>
-        <div className={styles.dock}>
-          <button type="submit" className={styles.btnPrimary}>
-            Save changes
-          </button>
-        </div>
-      </form>
+          {field(
+            'last4',
+            'Last 4 digits',
+            { inputMode: 'numeric', autoComplete: 'off' },
+            'Only the last 4. We never ask for your full card number.',
+          )}
+          {field(
+            'statementDate',
+            'Statement date',
+            { type: 'date', placeholder: 'Select statement date', max: form.dueDate || undefined },
+            'When the bill is generated. The card comes back as due from this date each month.',
+          )}
+          {field(
+            'dueDate',
+            bill?.status === 'paid' ? 'Next due date' : 'Due date',
+            { type: 'date', placeholder: 'Select due date', min: today },
+            'Repeats every month on this day.',
+          )}
+          <div className={styles.field}>
+            <p className={styles.label}>Card look</p>
+            <TileStylePicker
+              name="edit"
+              tone={tone}
+              pattern={pattern}
+              autoTone={card.tone}
+              onTone={(t) => {
+                setTone(t ?? card.tone);
+              }}
+              onPattern={(p) => {
+                setPattern(p);
+              }}
+            />
+          </div>
+          <div className={styles.dock}>
+            <button type="submit" className={styles.btnPrimary}>
+              Save changes
+            </button>
+          </div>
+        </form>
+      )}
 
-      <section className={styles.danger} aria-labelledby="remove-heading">
-        <h2 id="remove-heading" className={styles.dangerTitle}>
-          Remove this card
-        </h2>
-        <p className={styles.hint}>Stops its reminders and deletes its data from this device.</p>
-        <button
-          type="button"
-          className={styles.btnDanger}
-          onClick={() => confirmRef.current?.showModal()}
-        >
-          Remove card
-        </button>
-      </section>
+      {tab === 'details' && (
+        <section className={styles.danger} aria-labelledby="remove-heading">
+          <h2 id="remove-heading" className={styles.dangerTitle}>
+            Remove this card
+          </h2>
+          <p className={styles.hint}>Stops its reminders and deletes its data from this device.</p>
+          <button
+            type="button"
+            className={styles.btnDanger}
+            onClick={() => confirmRef.current?.showModal()}
+          >
+            Remove card
+          </button>
+        </section>
+      )}
 
       <dialog ref={confirmRef} className={styles.confirm} aria-labelledby="remove-confirm">
         <div className={styles.cautionIcon} aria-hidden="true">

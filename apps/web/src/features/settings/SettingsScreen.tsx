@@ -7,6 +7,7 @@ import { istInstant, toPayDayIcs } from '@creditq/core';
 import type { ContentLevel } from '@creditq/vault';
 import { buildPayDayEvents } from '@/features/reminders/reminder-plan';
 import { notificationsSupported } from '@/features/reminders/ReminderRuntime';
+import { haptic } from '@/lib/haptics';
 import { applyTheme, readTheme, saveTheme, THEMES, type Theme } from '@/lib/theme';
 import { getVault, useTodayInIndia, useVaultAction, useVaultData } from '@/lib/vault-client';
 import styles from './SettingsScreen.module.scss';
@@ -78,6 +79,7 @@ export default function SettingsScreen() {
     saveTheme(theme);
     setDraft({});
     setSaved(true);
+    haptic('save');
   };
 
   const enableNotifications = async () => {

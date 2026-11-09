@@ -292,6 +292,12 @@ export const openVault = async (options: VaultOptions = {}) => {
     const row = await db.payments.get(paymentId);
     if (!row) return;
     const payment = await read<Payment>('payments', row);
+    // The next month's bill was opened by this payment. Once that one is paid too, taking this
+    // payment back would orphan it, so the later payment has to be reverted first.
+    const next = await db.bills.get(payment.nextBillId);
+    if (next && next.status === 'paid') {
+      throw new Error('A later payment exists for this card. Revert that one first.');
+    }
     const bill = await getBill(payment.billId);
     const reopened = await billRow({ ...bill, status: 'open' });
     await db.transaction('rw', db.bills, db.payments, async () => {

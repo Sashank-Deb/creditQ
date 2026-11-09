@@ -44,7 +44,10 @@ export interface HomeTile {
   pattern: TilePattern;
   issuer: Issuer;
   dueLabel: string;
+  /** Pay day mark, only on the last card of its pay day group; empty on the others. */
   pill: string;
+  /** Cards that share a pay day share a key. */
+  groupKey: string;
   /** Every card listed individually is actionable: it has its own payment button. */
   isFocus: boolean;
 }
@@ -213,16 +216,20 @@ export const buildHomeView = (input: HomeInput): HomeView => {
   const isIndividual = (c: CardRecord) => !isPending(c) && (inThisWeek(c) || missedIds.has(c.id));
   const individual = unpaid.filter(isIndividual);
 
-  const seenGroups = new Set<string>();
-  const tiles = individual.map((c): HomeTile => {
+  // Cards sharing a pay day sit together, soonest pay day first, so one mark can close the group.
+  const ordered = [...individual].sort(
+    (x, y) =>
+      compareDates(payDayOf(x) ?? x.dueDate, payDayOf(y) ?? y.dueDate) ||
+      compareDates(x.dueDate, y.dueDate),
+  );
+  const keyOf = (c: CardRecord) => groupOf.get(c.id)?.key ?? c.id;
+  const lastOfGroup = new Map(ordered.map((c, i) => [keyOf(c), i]));
+  const tiles = ordered.map((c, i): HomeTile => {
     const group = groupOf.get(c.id);
-    let pill = '';
-    if (group) {
-      pill = seenGroups.has(group.key)
-        ? 'Same pay day'
-        : `Pay day ${formatCountdown(today, group.payDay)}`;
-      seenGroups.add(group.key);
-    }
+    const pill =
+      group && lastOfGroup.get(keyOf(c)) === i
+        ? capitalise(`Pay day ${formatCountdown(today, group.payDay)}`)
+        : '';
     return {
       cardId: c.id,
       name: c.name,
@@ -231,7 +238,8 @@ export const buildHomeView = (input: HomeInput): HomeView => {
       pattern: c.pattern ?? 'diamonds',
       issuer: detectIssuer(c.bank ?? c.name),
       dueLabel: `Due ${formatShortDate(c.dueDate)}`,
-      pill: capitalise(pill),
+      pill,
+      groupKey: keyOf(c),
       isFocus: true,
     };
   });
