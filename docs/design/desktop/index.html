@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en-IN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=JetBrains+Mono:wght@500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="theme.css" />
+    <link rel="stylesheet" href="desktop.css" />
+    <title>CreditQ desktop design options</title>
+    <style>
+      .w {
+        max-width: 960px;
+        margin: 0 auto;
+        padding: 48px 32px;
+      }
+      .g {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 24px;
+        margin-top: 32px;
+      }
+      .o {
+        display: grid;
+        gap: 12px;
+        padding: 24px;
+        border-radius: 16px;
+      }
+      .o a.btn {
+        justify-self: start;
+      }
+      ul {
+        display: grid;
+        gap: 8px;
+        padding-left: 20px;
+        list-style: disc;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="w">
+      <h1 class="heading-l">Desktop design options</h1>
+      <p class="muted" style="margin-top: 8px">
+        Same Sage &amp; Clay look, tokens, type roles and components as the app. Only the layout
+        changes. Each page has a light/dark switch (bottom right) and a view switch.
+      </p>
+      <div class="g">
+        <section class="card o">
+          <h2 class="heading-xs">Option A: top bar and side rail</h2>
+          <p class="para-s muted">The mobile Home, reflowed. Closest to what you have today.</p>
+          <ul class="para-s">
+            <li>Top bar: logo, Due soon / Spends, Add card, menu</li>
+            <li>Sticky left rail: calendar, reminders</li>
+            <li>Right: 2-column pay tiles, 3 deck columns</li>
+          </ul>
+          <a class="btn btn-primary" href="option-a.html">Open Option A</a>
+        </section>
+        <section class="card o">
+          <h2 class="heading-xs">Option B: sidebar</h2>
+          <p class="para-s muted">
+            A forest sidebar for the 3 destinations; the content area uses the full width.
+          </p>
+          <ul class="para-s">
+            <li>Sidebar: Due soon, Spends, Settings, Add card, privacy links</li>
+            <li>Overview band: calendar beside reminders</li>
+            <li>3-column pay tiles and decks</li>
+          </ul>
+          <a class="btn btn-primary" href="option-b.html">Open Option B</a>
+        </section>
+      </div>
+    </div>
+    <script src="components.js"></script>
+    <script>
+      CQ.chrome();
+    </script>
+  </body>
+</html>

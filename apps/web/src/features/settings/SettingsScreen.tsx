@@ -75,11 +75,12 @@ export default function SettingsScreen() {
   };
 
   const saveChanges = async () => {
+    // At the tap, not after the save: iPhone only allows a haptic inside the tap itself.
+    haptic('save');
     await act((v) => v.saveSettings({ leadDays, contentLevel }));
     saveTheme(theme);
     setDraft({});
     setSaved(true);
-    haptic('save');
   };
 
   const enableNotifications = async () => {

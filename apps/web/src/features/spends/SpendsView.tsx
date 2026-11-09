@@ -82,7 +82,7 @@ export default function SpendsView({ today, cards, payments }: SpendsViewProps) 
 
   return (
     <section className={styles.spends} aria-label="Spends">
-      <div>
+      <div className={styles.head}>
         <p className={styles.kicker}>Paid in {monthName}</p>
         <p className={styles.hero}>{formatRupees(selected.totalPaise)}</p>
         <p className={styles.note}>
@@ -94,18 +94,18 @@ export default function SpendsView({ today, cards, payments }: SpendsViewProps) 
         </p>
       </div>
 
-      <SegmentedControl
-        label="Split"
-        value={split}
-        onChange={setSplit}
-        options={[
-          { value: 'all', label: 'All cards' },
-          { value: 'each', label: 'Each card' },
-        ]}
-      />
+      <div className={styles.primary}>
+        <SegmentedControl
+          label="Split"
+          value={split}
+          onChange={setSplit}
+          options={[
+            { value: 'all', label: 'All cards' },
+            { value: 'each', label: 'Each card' },
+          ]}
+        />
 
-      {split === 'all' ? (
-        <>
+        {split === 'all' ? (
           <figure className={styles.chart} aria-label="Paid per month, last 6 months">
             <div className={styles.plot}>
               {summary.months.map((m) => (
@@ -132,87 +132,91 @@ export default function SpendsView({ today, cards, payments }: SpendsViewProps) 
             </div>
             <figcaption className={styles.note}>Tap a month to see it above.</figcaption>
           </figure>
-          <TransactionList cards={cards} payments={payments} />
-        </>
-      ) : (
-        <>
-          <div className={styles.filters}>
-            <button
-              type="button"
-              className={styles.chip}
-              aria-pressed={byBank}
-              onClick={() => setByBank((v) => !v)}
-            >
-              Group by bank
-            </button>
-          </div>
+        ) : (
+          <>
+            <div className={styles.filters}>
+              <button
+                type="button"
+                className={styles.chip}
+                aria-pressed={byBank}
+                onClick={() => setByBank((v) => !v)}
+              >
+                Group by bank
+              </button>
+            </div>
 
-          {byBank ? (
-            <div className={styles.banks} aria-label={`Paid per bank in ${monthName}`}>
-              {perBank.length === 0 && (
-                <p className={styles.note}>Nothing logged for {monthName}.</p>
-              )}
-              {perBank.map(({ bank, paise, cardCount, cards: bankCards }) => (
-                <section key={bank} className={styles.bank} aria-label={bank}>
-                  <header className={styles.bankHead}>
+            {byBank ? (
+              <div className={styles.banks} aria-label={`Paid per bank in ${monthName}`}>
+                {perBank.length === 0 && (
+                  <p className={styles.note}>Nothing logged for {monthName}.</p>
+                )}
+                {perBank.map(({ bank, paise, cardCount, cards: bankCards }) => (
+                  <section key={bank} className={styles.bank} aria-label={bank}>
+                    <header className={styles.bankHead}>
+                      <div className={styles.cardText}>
+                        <h3 className={styles.bankName}>{bank}</h3>
+                        <span className={styles.digits}>
+                          {cardCount} {cardCount === 1 ? 'card' : 'cards'} · total
+                        </span>
+                      </div>
+                      <span className={styles.cardAmount}>{formatRupees(paise)}</span>
+                    </header>
+                    <ul className={styles.cardList}>
+                      {bankCards.map(({ id, paise: cardPaise }) => {
+                        const card = cardById.get(id);
+                        return card ? (
+                          <li key={id} className={styles.cardRow}>
+                            <div className={styles.cardText}>
+                              <span className={styles.cardName}>{card.name}</span>
+                              <span className={styles.digits}>•••• {card.last4}</span>
+                            </div>
+                            <span className={styles.cardAmount}>{formatRupees(cardPaise)}</span>
+                            <span className={styles.track} aria-hidden="true">
+                              <span
+                                style={{
+                                  width: `${(cardPaise / paise) * 100}%`,
+                                  background: `var(--tile-${TONE_NUMBER[card.tone] ?? 1}-from)`,
+                                }}
+                              />
+                            </span>
+                          </li>
+                        ) : null;
+                      })}
+                    </ul>
+                  </section>
+                ))}
+              </div>
+            ) : (
+              <ul className={styles.cardList} aria-label={`Paid per card in ${monthName}`}>
+                {perCard.length === 0 && (
+                  <li className={styles.note}>Nothing logged for {monthName}.</li>
+                )}
+                {perCard.map(({ card, paise }) => (
+                  <li key={card.id} className={styles.cardRow}>
                     <div className={styles.cardText}>
-                      <h3 className={styles.bankName}>{bank}</h3>
-                      <span className={styles.digits}>
-                        {cardCount} {cardCount === 1 ? 'card' : 'cards'} · total
-                      </span>
+                      <span className={styles.cardName}>{card.name}</span>
+                      <span className={styles.digits}>•••• {card.last4}</span>
                     </div>
                     <span className={styles.cardAmount}>{formatRupees(paise)}</span>
-                  </header>
-                  <ul className={styles.cardList}>
-                    {bankCards.map(({ id, paise: cardPaise }) => {
-                      const card = cardById.get(id);
-                      return card ? (
-                        <li key={id} className={styles.cardRow}>
-                          <div className={styles.cardText}>
-                            <span className={styles.cardName}>{card.name}</span>
-                            <span className={styles.digits}>•••• {card.last4}</span>
-                          </div>
-                          <span className={styles.cardAmount}>{formatRupees(cardPaise)}</span>
-                          <span className={styles.track} aria-hidden="true">
-                            <span
-                              style={{
-                                width: `${(cardPaise / paise) * 100}%`,
-                                background: `var(--tile-${TONE_NUMBER[card.tone] ?? 1}-from)`,
-                              }}
-                            />
-                          </span>
-                        </li>
-                      ) : null;
-                    })}
-                  </ul>
-                </section>
-              ))}
-            </div>
-          ) : (
-            <ul className={styles.cardList} aria-label={`Paid per card in ${monthName}`}>
-              {perCard.length === 0 && (
-                <li className={styles.note}>Nothing logged for {monthName}.</li>
-              )}
-              {perCard.map(({ card, paise }) => (
-                <li key={card.id} className={styles.cardRow}>
-                  <div className={styles.cardText}>
-                    <span className={styles.cardName}>{card.name}</span>
-                    <span className={styles.digits}>•••• {card.last4}</span>
-                  </div>
-                  <span className={styles.cardAmount}>{formatRupees(paise)}</span>
-                  <span className={styles.track} aria-hidden="true">
-                    <span
-                      style={{
-                        width: `${(paise / cardMax) * 100}%`,
-                        background: `var(--tile-${TONE_NUMBER[card.tone] ?? 1}-from)`,
-                      }}
-                    />
-                  </span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </>
+                    <span className={styles.track} aria-hidden="true">
+                      <span
+                        style={{
+                          width: `${(paise / cardMax) * 100}%`,
+                          background: `var(--tile-${TONE_NUMBER[card.tone] ?? 1}-from)`,
+                        }}
+                      />
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </>
+        )}
+      </div>
+      {split === 'all' && (
+        <div className={styles.secondary}>
+          <TransactionList cards={cards} payments={payments} />
+        </div>
       )}
 
       <table className={styles.srOnly}>

@@ -258,3 +258,14 @@ $motion: (
     @content;
   }
 }
+
+// The desktop layout starts here. Below it, every screen keeps the mobile layout (a centred
+// column), including tablets: the Home rail, tile columns and three deck columns need about
+// 1220px (rail 296 + gap 24 + three 270px decks + gaps and padding).
+$desktop: 1240px;
+
+@mixin desktop {
+  @media (min-width: $desktop) {
+    @content;
+  }
+}

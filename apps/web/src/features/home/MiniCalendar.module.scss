@@ -93,3 +93,26 @@ $cell: 20px;
 .payDot {
   background: var(--cal-pay);
 }
+
+// Desktop: the calendar sits in the left rail, a little larger.
+@include desktop {
+  .calendar {
+    padding: space(400);
+  }
+
+  .grid {
+    grid-template-columns: repeat(7, 36px);
+    grid-auto-rows: 36px;
+    gap: 2px;
+  }
+
+  .weekday,
+  .day {
+    font-size: 14px;
+    line-height: 36px;
+  }
+
+  .title {
+    font-size: 14px;
+  }
+}

@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="en-IN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=JetBrains+Mono:wght@500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="theme.css" />
+    <link rel="stylesheet" href="desktop.css" />
+    <title>CreditQ desktop, Option B: sidebar</title>
+    <style>
+      /* Option B: a quiet forest sidebar holds the 3 destinations; the content area is wider, with
+     the calendar and reminders as one overview band, then 3 columns of cards and decks. */
+      body {
+        display: grid;
+        grid-template-columns: 248px minmax(0, 1fr);
+        min-height: 100vh;
+      }
+      .side {
+        position: sticky;
+        top: 0;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        gap: var(--s6);
+        padding: var(--s6) var(--s4);
+        background: var(--bg-inverse-primary);
+        color: var(--content-inverse-primary);
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: var(--s3);
+        padding: 0 var(--s2);
+        font: 700 24px/32px var(--font-display);
+        letter-spacing: -0.01em;
+      }
+      .brand img {
+        width: 36px;
+        height: 36px;
+      }
+      .nav {
+        display: grid;
+        gap: var(--s1);
+      }
+      .nav button {
+        height: 44px;
+        padding: 0 var(--s3);
+        border: 0;
+        border-radius: var(--r-default);
+        background: transparent;
+        color: inherit;
+        display: flex;
+        align-items: center;
+        gap: var(--s3);
+        font: 500 16px/20px var(--font-sans);
+        text-align: left;
+        opacity: 0.8;
+      }
+      .nav button:hover {
+        background: var(--bg-nav-selected);
+        opacity: 1;
+      }
+      .nav button.on {
+        background: var(--bg-nav-selected);
+        opacity: 1;
+        font-weight: 600;
+      }
+      .nav svg {
+        flex-shrink: 0;
+      }
+      .nav .count {
+        margin-left: auto;
+      }
+      .side .add {
+        height: 48px;
+        border: 0;
+        border-radius: var(--r-pill);
+        background: var(--content-inverse-primary);
+        color: var(--bg-inverse-primary);
+        font: 600 16px/20px var(--font-sans);
+      }
+      .side .foot {
+        margin-top: auto;
+        display: grid;
+        gap: var(--s3);
+        padding: 0 var(--s2);
+        font: 400 12px/16px var(--font-sans);
+        opacity: 0.8;
+      }
+      .side .foot nav {
+        display: flex;
+        gap: var(--s4);
+      }
+      .side .foot a:hover {
+        text-decoration: underline;
+      }
+      .content {
+        padding: var(--s8) var(--s8) var(--s10);
+        max-width: 1160px;
+        min-width: 0;
+      }
+      .ph {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: var(--s4);
+        margin-bottom: var(--s6);
+      }
+      .overview {
+        display: grid;
+        grid-template-columns: 340px minmax(0, 1fr);
+        gap: var(--s5);
+        margin-bottom: var(--s8);
+        align-items: start;
+      }
+      .tiles {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: var(--s5);
+      }
+      .tile-foot {
+        display: flex;
+        margin-top: var(--s5);
+      }
+      .decks {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: var(--s5);
+        margin-top: var(--s8);
+      }
+      .spends {
+        display: grid;
+        gap: var(--s6);
+      }
+      .sp-main {
+        display: grid;
+        grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+        gap: var(--s6);
+        align-items: start;
+      }
+      @media (max-width: 1100px) {
+        body {
+          grid-template-columns: 208px minmax(0, 1fr);
+        }
+        .overview,
+        .sp-main {
+          grid-template-columns: 1fr;
+        }
+        .tiles,
+        .decks {
+          grid-template-columns: 1fr 1fr;
+        }
+        .content {
+          padding: var(--s6);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <aside class="side">
+      <a class="brand" href="#"><img src="logo.svg" alt="" />CreditQ</a>
+      <nav class="nav" role="tablist" aria-label="Destinations">
+        <button class="on" role="tab" aria-selected="true" data-view="due">
+          <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+            <rect
+              x="3.5"
+              y="5"
+              width="17"
+              height="15"
+              rx="3"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            />
+            <path
+              d="M8 3v4M16 3v4M3.5 10h17"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              fill="none"
+            /></svg
+          >Due soon <span class="count">3</span>
+        </button>
+        <button role="tab" aria-selected="false" data-view="spends">
+          <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+            <path
+              d="M5 20V11M12 20V5M19 20v-6"
+              stroke="currentColor"
+              stroke-width="2.25"
+              stroke-linecap="round"
+              fill="none"
+            /></svg
+          >Spends
+        </button>
+        <button role="tab" aria-selected="false" data-view="settings">
+          <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+            <circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="2" />
+            <path
+              d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+            /></svg
+          >Settings
+        </button>
+      </nav>
+      <button class="add">+ Add card</button>
+      <div class="foot">
+        <p>Stays on this device. No account, no cloud copy.</p>
+        <nav><a href="#">Privacy</a><a href="#">Terms</a></nav>
+      </div>
+    </aside>
+    <main class="content">
+      <div data-pane="due">
+        <div class="ph">
+          <h1 class="heading-l">Due soon</h1>
+          <p class="label-s muted">Monday, 9 November</p>
+        </div>
+        <div class="overview">
+          <div id="cal"></div>
+          <div id="tl"></div>
+        </div>
+        <section aria-labelledby="pay">
+          <h2 class="sec-h" id="pay">Pay this week<span class="count">3</span></h2>
+          <div id="tiles"></div>
+          <div class="tile-foot" id="pill"></div>
+        </section>
+        <div class="decks" id="decks"></div>
+      </div>
+      <div data-pane="spends" hidden>
+        <div class="ph"><h1 class="heading-l">Spends</h1></div>
+        <div id="spends"></div>
+      </div>
+      <div data-pane="settings" hidden>
+        <div class="ph"><h1 class="heading-l">Settings</h1></div>
+        <p class="muted">
+          Same groups as the mobile Settings, in a 640px column: Reminders, Appearance, Backup, Your
+          data stays on this device.
+        </p>
+      </div>
+    </main>
+    <script src="components.js"></script>
+    <script>
+      document.getElementById('cal').innerHTML = CQ.calendar();
+      document.getElementById('tl').innerHTML = CQ.timeline();
+      document.getElementById('tiles').innerHTML = CQ.tiles();
+      document.getElementById('pill').innerHTML = CQ.tilePill();
+      document.getElementById('decks').innerHTML = CQ.decks();
+      document.getElementById('spends').innerHTML = CQ.spends();
+      CQ.chrome();
+    </script>
+  </body>
+</html>

@@ -202,3 +202,21 @@ $card-height: 168px;
   place-items: center;
   color: inherit;
 }
+
+// Desktop: three decks sit side by side. The grid already spaces them, and a narrow deck drops
+// the last 4 digits on the back strips so the card name stays readable.
+@include desktop {
+  .section {
+    margin-top: 0;
+  }
+
+  .deck {
+    container-type: inline-size;
+  }
+
+  @container (max-width: 320px) {
+    .strip .digits {
+      display: none;
+    }
+  }
+}

@@ -5,6 +5,34 @@
   display: flex;
   flex-direction: column;
   gap: space(600);
+
+  // Desktop: the chart on the left, every transaction on the right.
+  @include desktop {
+    display: grid;
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+    align-items: start;
+    column-gap: space(600);
+    margin-top: space(600);
+  }
+}
+
+.head {
+  @include desktop {
+    grid-column: 1 / -1;
+  }
+}
+
+// On mobile these wrappers add nothing: their children stack in the page column as before.
+.primary,
+.secondary {
+  display: contents;
+
+  @include desktop {
+    display: flex;
+    flex-direction: column;
+    gap: space(600);
+    min-width: 0;
+  }
 }
 
 .srOnly {
@@ -30,6 +58,12 @@
 
 .empty {
   padding: space(600) 0;
+
+  // Desktop: the empty message keeps the readable mobile column, centred.
+  @include desktop {
+    max-width: 480px;
+    margin: space(600) auto 0;
+  }
 }
 
 .emptyTitle {

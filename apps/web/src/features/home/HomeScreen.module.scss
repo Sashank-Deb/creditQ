@@ -155,7 +155,9 @@
   }
 }
 
-.tabs {
+.topBar .tabs {
+  // Two classes on purpose: the tab component sets width: 100% with one, and which stylesheet
+  // loads last changes after visiting another page, so equal specificity let it win.
   // In the top bar the tabs take the space the two round buttons leave.
   flex: 1;
   min-width: 0;
@@ -257,4 +259,157 @@
   @include type(paragraph-m);
   margin: 0;
   color: var(--content-secondary);
+}
+
+// ---- mobile: the new wrappers add nothing, so the page column is exactly as before ----
+.brand,
+.addLabel,
+.railPrivacy {
+  display: none;
+}
+
+.actions,
+.dueGrid,
+.rail,
+.main,
+.decks {
+  display: contents;
+}
+
+// ---- desktop (1240px and wider): the top bar, a left rail, 2 tile columns, 3 deck columns ----
+@include desktop {
+  .screen {
+    max-width: 1280px;
+    padding: 0 space(600) space(900);
+    gap: 0;
+  }
+
+  .topBar {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    height: 72px;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: space(600);
+    // The page colour, slightly see-through, so cards scroll softly under the bar.
+    background: color-mix(in srgb, var(--bg-primary) 90%, transparent);
+    backdrop-filter: blur(12px);
+  }
+
+  .brand {
+    @include type(heading-s);
+    display: flex;
+    align-items: center;
+    gap: space(300);
+  }
+
+  .brandMark {
+    width: 36px;
+    height: 36px;
+    background: url('/icon.svg') center / contain no-repeat;
+  }
+
+  .topBar .tabs {
+    flex: none;
+    width: 280px;
+    justify-self: center;
+  }
+
+  .actions {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: space(300);
+  }
+
+  // The round "+" becomes a labelled button: there is room for words.
+  .addCard {
+    @include type(label-m);
+    width: auto;
+    height: 48px;
+    margin-left: 0;
+    padding: 0 space(600);
+    gap: space(200);
+    border: 0;
+    background: var(--bg-inverse-primary);
+    color: var(--content-inverse-primary);
+  }
+
+  .addLabel {
+    display: inline;
+  }
+
+  .dueGrid {
+    display: grid;
+    grid-template-columns: 296px minmax(0, 1fr);
+    gap: space(600);
+    align-items: start;
+    margin-top: space(600);
+  }
+
+  .rail {
+    display: grid;
+    gap: space(400);
+    position: sticky;
+    // Below the 72px top bar.
+    top: space(1000);
+  }
+
+  .overview {
+    grid-template-columns: minmax(0, 1fr);
+    gap: space(400);
+  }
+
+  .railPrivacy {
+    @include type(paragraph-s);
+    display: block;
+    margin: 0;
+    padding: 0 space(200);
+    color: var(--content-secondary);
+  }
+
+  .privacyInRail {
+    display: none;
+  }
+
+  .main {
+    display: grid;
+    gap: space(800);
+    min-width: 0;
+  }
+
+  .stack {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: space(500);
+
+    &:empty {
+      display: none;
+    }
+  }
+
+  // One pay day mark closes its group, centred under the cards.
+  .groupMark {
+    grid-column: 1 / -1;
+  }
+
+  .decks {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: space(500);
+    align-items: start;
+  }
+
+  .empty {
+    max-width: 480px;
+    margin: 0 auto;
+  }
+
+  // The amount sheet floats in the middle of the screen instead of sliding up from the bottom.
+  .sheet {
+    margin: auto;
+    border-radius: radius(large);
+    max-width: 440px;
+  }
 }

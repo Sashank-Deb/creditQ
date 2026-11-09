@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import { formatClock, formatRupees } from '@creditq/core';
 import { haptic } from '@/lib/haptics';
 import Confetti from '@/components/Confetti';
@@ -88,6 +88,8 @@ export default function HomeScreen() {
 
   const markPaid = async (logAmount: boolean) => {
     if (!sheetCard) return;
+    // At the tap, not after the save: iPhone only allows a haptic inside the tap itself.
+    haptic('success');
     const amountPaise = logAmount && rupees > 0 ? Math.round(rupees * 100) : null;
     setSheetFor(null);
     setAmount('');
@@ -97,7 +99,6 @@ export default function HomeScreen() {
     const logged = amountPaise ? ` · ${formatRupees(amountPaise)} logged` : '';
     setSnack({ text: `Marked paid${logged}`, undoPaymentId: payment.id });
     setCelebrate((n) => n + 1);
-    haptic('success');
   };
 
   const undo = async () => {
@@ -109,6 +110,10 @@ export default function HomeScreen() {
   return (
     <main className={styles.screen}>
       <header className={styles.topBar}>
+        <span className={styles.brand}>
+          <span className={styles.brandMark} aria-hidden="true" />
+          CreditQ
+        </span>
         <SegmentedControl
           className={styles.tabs}
           label="View"
@@ -129,10 +134,19 @@ export default function HomeScreen() {
             { value: 'spends', label: 'Spends' },
           ]}
         />
-        <Link href="/add" className={styles.iconButton} aria-label="Add a card">
-          +
-        </Link>
-        <MoreMenu />
+        <div className={styles.actions}>
+          <Link
+            href="/add"
+            className={`${styles.iconButton} ${styles.addCard}`}
+            aria-label="Add a card"
+          >
+            <span aria-hidden="true">+</span>
+            <span className={styles.addLabel} aria-hidden="true">
+              Add card
+            </span>
+          </Link>
+          <MoreMenu />
+        </div>
       </header>
 
       {tab === 'spends' && data && (
@@ -151,58 +165,73 @@ export default function HomeScreen() {
         </section>
       )}
       {tab === 'due' && !view.isEmpty && (
-        <>
-          <div className={styles.overview}>
-            <MiniCalendar calendar={view.calendar} />
-            <ReminderTimeline
-              items={view.timeline}
-              time={formatClock(data?.settings.reminderTime ?? '09:00')}
-            />
-            <p className={styles.srOnly} role="status">
-              {view.banner}
-            </p>
+        <div className={styles.dueGrid}>
+          <aside className={styles.rail} aria-label="Calendar and reminders">
+            <div className={styles.overview}>
+              <MiniCalendar calendar={view.calendar} />
+              <ReminderTimeline
+                items={view.timeline}
+                time={formatClock(data?.settings.reminderTime ?? '09:00')}
+              />
+              <p className={styles.srOnly} role="status">
+                {view.banner}
+              </p>
+            </div>
+            <p className={styles.railPrivacy}>Stays on this device. No account, no cloud copy.</p>
+          </aside>
+          <div className={styles.main}>
+            <ol className={styles.stack}>
+              {view.tiles.map((t) => (
+                <Fragment key={t.cardId}>
+                  <li>
+                    <CardTile
+                      name={t.name}
+                      last4={t.last4}
+                      tone={t.tone}
+                      pattern={t.pattern}
+                      dueLabel={t.dueLabel}
+                      issuer={t.issuer}
+                      focus={t.isFocus}
+                      editHref={`/card?id=${encodeURIComponent(t.cardId)}`}
+                      actions={
+                        t.isFocus ? (
+                          <button
+                            type="button"
+                            className={tileStyles.btnOnTile}
+                            onClick={() => setSheetFor(t.cardId)}
+                          >
+                            Mark as paid
+                          </button>
+                        ) : null
+                      }
+                    />
+                  </li>
+                  {t.pill && (
+                    <li className={styles.groupMark}>
+                      <span className={styles.pill}>
+                        <span className={styles.dot} aria-hidden="true" />
+                        {t.pill}
+                      </span>
+                    </li>
+                  )}
+                </Fragment>
+              ))}
+            </ol>
+            {view.tiles.length === 0 && <p className={styles.quiet}>Nothing to pay this week.</p>}
+            <div className={styles.decks}>
+              <CardDeck title="Recently added" cards={view.decks.recent} />
+              <CardDeck title="Paid this cycle" cards={view.decks.paid} />
+              <CardDeck title="Bill generated" cards={view.decks.generated} />
+            </div>
           </div>
-          <ol className={styles.stack}>
-            {view.tiles.map((t) => (
-              <li key={t.cardId}>
-                <CardTile
-                  name={t.name}
-                  last4={t.last4}
-                  tone={t.tone}
-                  pattern={t.pattern}
-                  dueLabel={t.dueLabel}
-                  issuer={t.issuer}
-                  focus={t.isFocus}
-                  editHref={`/card?id=${encodeURIComponent(t.cardId)}`}
-                  actions={
-                    t.isFocus ? (
-                      <button
-                        type="button"
-                        className={tileStyles.btnOnTile}
-                        onClick={() => setSheetFor(t.cardId)}
-                      >
-                        Mark as paid
-                      </button>
-                    ) : null
-                  }
-                />
-                {t.pill && (
-                  <span className={styles.pill}>
-                    <span className={styles.dot} aria-hidden="true" />
-                    {t.pill}
-                  </span>
-                )}
-              </li>
-            ))}
-          </ol>
-          {view.tiles.length === 0 && <p className={styles.quiet}>Nothing to pay this week.</p>}
-          <CardDeck title="Recently added" cards={view.decks.recent} />
-          <CardDeck title="Paid this cycle" cards={view.decks.paid} />
-          <CardDeck title="Bill generated" cards={view.decks.generated} />
-        </>
+        </div>
       )}
 
-      <p className={styles.privacy}>Stays on this phone. No account, no cloud copy.</p>
+      <p
+        className={`${styles.privacy} ${tab === 'due' && !view.isEmpty ? styles.privacyInRail : ''}`}
+      >
+        Stays on this device. No account, no cloud copy.
+      </p>
 
       {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-noninteractive-element-interactions -- tapping the dimmed backdrop is a pointer shortcut; keyboard users have Escape and the Close button */}
       <dialog

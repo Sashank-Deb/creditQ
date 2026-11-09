@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="en-IN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=JetBrains+Mono:wght@500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="theme.css" />
+    <link rel="stylesheet" href="desktop.css" />
+    <title>CreditQ desktop, Option A: top bar and side rail</title>
+    <style>
+      /* Option A: the mobile Home reflowed. Top bar with the 3 destinations; calendar and reminders
+     stay together in a sticky left column; cards and decks fill the right. */
+      .topbar {
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        background: color-mix(in srgb, var(--bg-primary) 90%, transparent);
+        backdrop-filter: blur(12px);
+        border-bottom: 1px solid var(--border-transparent);
+      }
+      .topbar-in {
+        max-width: 1280px;
+        margin: 0 auto;
+        height: 72px;
+        padding: 0 var(--s6);
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        align-items: center;
+        gap: var(--s6);
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: var(--s3);
+        font: 700 24px/32px var(--font-display);
+        letter-spacing: -0.01em;
+      }
+      .brand img {
+        width: 36px;
+        height: 36px;
+      }
+      .topbar-r {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        gap: var(--s3);
+      }
+      .page {
+        max-width: 1280px;
+        margin: 0 auto;
+        padding: var(--s6);
+      }
+      .due-grid {
+        display: grid;
+        grid-template-columns: 296px minmax(0, 1fr);
+        gap: var(--s6);
+        align-items: start;
+      }
+      .rail {
+        position: sticky;
+        top: 96px;
+        display: grid;
+        gap: var(--s4);
+      }
+      .rail .privacy {
+        font: 400 14px/20px var(--font-sans);
+        color: var(--content-secondary);
+        padding: 0 var(--s2);
+      }
+      .main {
+        display: grid;
+        gap: var(--s8);
+        min-width: 0;
+      }
+      .tiles {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: var(--s5);
+      }
+      .tile-foot {
+        display: flex;
+        justify-content: center;
+        margin-top: var(--s5);
+      }
+      .decks {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: var(--s5);
+      }
+      .spends {
+        display: grid;
+        gap: var(--s6);
+      }
+      .sp-main {
+        display: grid;
+        grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+        gap: var(--s6);
+        align-items: start;
+      }
+      @media (max-width: 1100px) {
+        .due-grid,
+        .sp-main {
+          grid-template-columns: 1fr;
+        }
+        .rail {
+          position: static;
+          grid-template-columns: 1fr 1fr;
+        }
+        .decks {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="topbar-in">
+        <a class="brand" href="#"><img src="logo.svg" alt="" />CreditQ</a>
+        <div class="seg" role="tablist" aria-label="View" style="min-width: 280px">
+          <button class="on" role="tab" aria-selected="true" data-view="due">
+            Due soon <span class="count">3</span>
+          </button>
+          <button role="tab" aria-selected="false" data-view="spends">Spends</button>
+        </div>
+        <div class="topbar-r">
+          <button class="btn btn-primary" aria-label="Add a card">+ Add card</button>
+          <button class="btn-icon" aria-label="More" aria-haspopup="menu">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true">
+              <circle cx="12" cy="5" r="2" />
+              <circle cx="12" cy="12" r="2" />
+              <circle cx="12" cy="19" r="2" />
+            </svg>
+          </button>
+        </div>
+      </div>
+    </header>
+    <main class="page">
+      <div data-pane="due" class="due-grid">
+        <aside class="rail" aria-label="Calendar and reminders">
+          <div id="cal"></div>
+          <div id="tl"></div>
+          <p class="privacy">Stays on this device. No account, no cloud copy.</p>
+        </aside>
+        <div class="main">
+          <section aria-labelledby="pay">
+            <h2 class="sec-h" id="pay">Pay this week<span class="count">3</span></h2>
+            <div id="tiles"></div>
+            <div class="tile-foot" id="pill"></div>
+          </section>
+          <div class="decks" id="decks"></div>
+        </div>
+      </div>
+      <div data-pane="spends" hidden id="spends"></div>
+    </main>
+    <script src="components.js"></script>
+    <script>
+      document.getElementById('cal').innerHTML = CQ.calendar();
+      document.getElementById('tl').innerHTML = CQ.timeline();
+      document.getElementById('tiles').innerHTML = CQ.tiles();
+      document.getElementById('pill').innerHTML = CQ.tilePill();
+      document.getElementById('decks').innerHTML = CQ.decks();
+      document.getElementById('spends').innerHTML = CQ.spends();
+      CQ.chrome();
+    </script>
+  </body>
+</html>

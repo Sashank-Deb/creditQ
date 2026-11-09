@@ -164,3 +164,13 @@ $gutter: 20px;
   margin: 0;
   color: var(--content-secondary);
 }
+
+// Desktop: the reminders become a card under the calendar in the left rail.
+@include desktop {
+  .timeline {
+    padding: space(400);
+    border-radius: radius(default);
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-opaque);
+  }
+}
